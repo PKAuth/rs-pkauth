@@ -1,0 +1,10 @@
+[package]
+name = "pkauth"
+version = "0.1.0"
+authors = ["James Parker <jp@pkauth.com>"]
+
+[dependencies]
+ring="*"
+serde="*"
+untrusted="^0.6.0"
+crypto-abstract={path="../rs-crypto-abstract"}
