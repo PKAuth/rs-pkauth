@@ -1,4 +1,5 @@
 
+extern crate base64;
 extern crate crypto_abstract;
 extern crate serde;
 
