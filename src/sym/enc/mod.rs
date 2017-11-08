@@ -7,10 +7,10 @@ use std::fmt;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de::{Visitor, MapAccess, Deserialize, Deserializer};
 
-use internal::PKAIdentifier;
+use internal::{PKAIdentifier,PSF};
 
 pub struct PKASymEncrypted {
-    ciphertext : CipherText,
+    ciphertext : PSF<CipherText>,
     identifier : PKAIdentifier,
     algorithm : Algorithm
 }
