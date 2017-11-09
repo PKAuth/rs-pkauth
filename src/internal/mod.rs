@@ -4,9 +4,10 @@ pub mod sym;
 use base64;
 use ring::digest::{digest, SHA256};
 use ripemd160::{Ripemd160, Digest};
+use rust_base58::base58::{ToBase58};
 use std::marker::PhantomData;
 
-pub type PKAIdentifier = Vec<u8>;
+pub type PKAIdentifier = String;
 
 pub struct PSF<T> ( Vec<u8>, PhantomData<T>); // JP: PhantomData is annoying. Hopefully we can eventually drop.
 
@@ -39,9 +40,10 @@ trait DecodePSF {
 }
 
 pub fn generate_identifier<T>( PSF(raw, _) : PSF<T>) -> PKAIdentifier {
-    let hash = ripemd160( &sha256( &raw));
+    let mut hash = ripemd160( &sha256( &raw));
     let checksum = checksum_identifier( &hash);
-    unimplemented!()
+    hash.extend( checksum);
+    hash.to_base58()
 }
 
 fn checksum_identifier( ident : &Vec<u8>) -> Vec<u8> {

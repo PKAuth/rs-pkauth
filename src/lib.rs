@@ -3,6 +3,7 @@ extern crate base64;
 extern crate crypto_abstract;
 extern crate ring;
 extern crate ripemd160;
+extern crate rust_base58;
 extern crate serde;
 
 mod internal;
