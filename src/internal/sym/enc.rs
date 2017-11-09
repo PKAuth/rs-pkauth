@@ -1,11 +1,21 @@
 
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
 
-use internal::{ToIdentifier, AlgorithmId, PSF, EncodePSF};
+use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier};
 
 impl ToIdentifier for Key {
-    fn to_identifier( key : &Key) -> String {
-        unimplemented!()
+    fn to_identifier( key : &Key) -> PKAIdentifier {
+        let serialized = EncodePSF::encode_psf( key);
+        generate_identifier( serialized)
+    }
+}
+
+impl EncodePSF for Key {
+    fn encode_psf( key : &Key) -> PSF<Key> {
+        match *key {
+            Key::SEAesGcm256( key) =>
+                unimplemented!()
+        }
     }
 }
 

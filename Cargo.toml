@@ -6,6 +6,7 @@ authors = ["James Parker <jp@pkauth.com>"]
 [dependencies]
 base64="*"
 ring="*"
+ripemd160="*"
 serde="*"
 untrusted="^0.6.0"
 crypto-abstract={path="../rs-crypto-abstract"}
