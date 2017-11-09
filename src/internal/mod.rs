@@ -1,4 +1,6 @@
 
+pub mod sym;
+
 use base64;
 use std::marker::PhantomData;
 
@@ -17,7 +19,19 @@ fn deserialize_ps<T>( encoded : String) -> Result<PSF<T>, &'static str> {
     }
 }
 
-trait AlgorithmId {
+pub trait AlgorithmId {
     fn to_algorithm_id( &Self) -> &'static str;
     fn from_algorithm_id( &str) -> Option<Self> where Self : Sized;
+}
+
+pub trait ToIdentifier {
+    fn to_identifier( &Self) -> PKAIdentifier;
+}
+
+pub trait EncodePSF {
+    fn encode_psf( &Self) -> PSF<Self> where Self : Sized;
+}
+
+trait DecodePSF {
+    fn decode_psf( &PSF<Self>) -> Result<Self,String> where Self : Sized;
 }

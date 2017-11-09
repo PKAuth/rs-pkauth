@@ -1,6 +1,7 @@
 
 extern crate base64;
 extern crate crypto_abstract;
+extern crate ring;
 extern crate serde;
 
 mod internal;

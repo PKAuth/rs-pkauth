@@ -1,16 +1,21 @@
 // #![feature(plugin)]
 // #![plugin(serde_macros)]
 
-use crypto_abstract::sym::enc::*;
+use crypto_abstract::ToAlgorithm;
+use crypto_abstract::sym::enc;
 pub use crypto_abstract::sym::enc::{gen, Key, Algorithm};
+use ring::error::Unspecified;
+use ring::rand::{SecureRandom, SystemRandom};
 use std::fmt;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de::{Visitor, MapAccess, Deserialize, Deserializer};
 
-use internal::{PKAIdentifier,PSF};
+use internal::{PKAIdentifier,PSF, EncodePSF};
+use internal::*;
+use internal::sym::enc::*;
 
 pub struct PKASymEncrypted {
-    ciphertext : PSF<CipherText>,
+    ciphertext : PSF<enc::CipherText>,
     identifier : PKAIdentifier,
     algorithm : Algorithm
 }
@@ -59,3 +64,24 @@ pub struct PKASymEncrypted {
 //     }
 // 
 // }
+
+
+// encrypt:
+// a -> bytestring -> PKAEncrypted
+// encryptContent:
+//      bytestring -> PKAEncrypted
+// encrypt':
+// a -> bytestring -> PKAEncrypted -> ByteString
+// encryptContent':
+//      bytestring -> PKAEncrypted -> ByteString
+
+pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<PKASymEncrypted, Unspecified> {
+    let ciphertext = enc::encrypt( &rng, &key, msg)?;
+
+    let i = ToIdentifier::to_identifier( &key);
+    let a = ToAlgorithm::to_algorithm( &key);
+
+    Ok( PKASymEncrypted{ ciphertext : EncodePSF::encode_psf( &ciphertext), identifier : i, algorithm : a})
+}
+
+
