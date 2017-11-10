@@ -1,5 +1,7 @@
 
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
+use serde::ser::{Serialize, Serializer};
+use std::marker::PhantomData;
 
 use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier};
 
@@ -14,7 +16,8 @@ impl EncodePSF for Key {
     fn encode_psf( key : &Key) -> PSF<Key> {
         match *key {
             Key::SEAesGcm256( key) =>
-                unimplemented!()
+                // TODO: Test this XXX
+                PSF( key.to_vec(), PhantomData)
         }
     }
 }
@@ -34,8 +37,26 @@ impl AlgorithmId for Algorithm {
     }
 }
 
+// Can't have orphans.
+// impl Serialize for Algorithm {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S:Serializer {
+//         self.to_algorithm_id().serialize( serializer)
+//     }
+// }
+
+// impl Deserialize for Algorithm {
+// 
+// }
+
 impl EncodePSF for CipherText {
-    fn encode_psf( ref cipher : &CipherText) -> PSF<CipherText> {
-        unimplemented!()
+    fn encode_psf( cipher : &CipherText) -> PSF<CipherText> {
+        match cipher {
+            &CipherText::SEAesGcm256( ref nonce, ref ciphertext) => {
+                // TODO: Test this. Correct order? XXX
+                let v = Vec::with_capacity( nonce.len() + ciphertext.len());
+                PSF( v, PhantomData)
+            }
+        }
     }
 }
+

@@ -9,5 +9,7 @@ ring="*"
 ripemd160="*"
 rust-base58="*"
 serde="*"
+serde_derive="*"
+serde_json="*"
 untrusted="^0.6.0"
 crypto-abstract={path="../rs-crypto-abstract"}

@@ -6,18 +6,32 @@ use crypto_abstract::sym::enc;
 pub use crypto_abstract::sym::enc::{gen, Key, Algorithm};
 use ring::error::Unspecified;
 use ring::rand::{SecureRandom, SystemRandom};
-use std::fmt;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de::{Visitor, MapAccess, Deserialize, Deserializer};
+use serde_json;
+use std::fmt;
 
 use internal::{PKAIdentifier,PSF, EncodePSF};
 use internal::*;
 use internal::sym::enc::*;
 
+// #[derive(Serialize, Deserialize)]
 pub struct PKASymEncrypted {
     ciphertext : PSF<enc::CipherText>,
     identifier : PKAIdentifier,
     algorithm : Algorithm
+}
+
+impl Serialize for PKASymEncrypted {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        let mut s = serializer.serialize_struct("PKASymEncrypted", 3)?;
+        s.serialize_field( "ciphertext", &self.ciphertext)?;
+        s.serialize_field( "identifier", &self.identifier)?;
+        let a = AlgorithmId::to_algorithm_id( &self.algorithm);
+        s.serialize_field( "algorithm", a)?;
+
+        s.end()
+    }
 }
 
 // impl Serialize for PKASymEncrypted {
@@ -84,4 +98,9 @@ pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result
     Ok( PKASymEncrypted{ ciphertext : EncodePSF::encode_psf( &ciphertext), identifier : i, algorithm : a})
 }
 
+pub fn encrypt_content_bs( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<Vec<u8>, &'static str> {
+    let encrypted = encrypt_content( rng, key, msg).map_err(|_| "Error encrypting content.")?;
+
+    serde_json::to_vec( &encrypted).map_err(|_| "Error converting encrypted content to json.")
+}
 
