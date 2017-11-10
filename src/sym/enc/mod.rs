@@ -89,13 +89,23 @@ impl Serialize for PKASymEncrypted {
 // encryptContent':
 //      bytestring -> PKAEncrypted -> ByteString
 
-pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<PKASymEncrypted, Unspecified> {
-    let ciphertext = enc::encrypt( &rng, &key, msg)?;
+pub fn encrypt<T>( rng : &SystemRandom, key : Key, o : T) -> Result<PKASymEncrypted, &'static str> where T:Serialize {
+    let r = serde_json::to_vec( &o).map_err(|_| "Error generating json.")?;
+    encrypt_content( rng, key, r)
+}
+
+pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<PKASymEncrypted, &'static str> {
+    let ciphertext = enc::encrypt( &rng, &key, msg).map_err(|_| "Error encrypting content.")?;
 
     let i = ToIdentifier::to_identifier( &key);
     let a = ToAlgorithm::to_algorithm( &key);
 
     Ok( PKASymEncrypted{ ciphertext : EncodePSF::encode_psf( &ciphertext), identifier : i, algorithm : a})
+}
+
+pub fn encrypt_bs<T>( rng : &SystemRandom, key : Key, o : T) -> Result<Vec<u8>, &'static str> where T:Serialize {
+    let r = serde_json::to_vec( &o).map_err(|_| "Error generating json.")?;
+    encrypt_content_bs( rng, key, r)
 }
 
 pub fn encrypt_content_bs( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<Vec<u8>, &'static str> {
