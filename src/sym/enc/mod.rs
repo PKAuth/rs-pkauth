@@ -1,6 +1,7 @@
 // #![feature(plugin)]
 // #![plugin(serde_macros)]
 
+use boolinator::Boolinator;
 use crypto_abstract::ToAlgorithm;
 use crypto_abstract::sym::enc;
 pub use crypto_abstract::sym::enc::{gen, Key, Algorithm};
@@ -11,7 +12,7 @@ use serde::de::{Visitor, MapAccess, Deserialize, Deserializer};
 use serde_json;
 use std::fmt;
 
-use internal::{PKAIdentifier,PSF, EncodePSF};
+use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};
 use internal::*;
 use internal::sym::enc::*;
 
@@ -101,6 +102,19 @@ pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result
     let a = ToAlgorithm::to_algorithm( &key);
 
     Ok( PKASymEncrypted{ ciphertext : EncodePSF::encode_psf( &ciphertext), identifier : i, algorithm : a})
+}
+
+pub fn decrypt_content( key : Key, cipher : PKASymEncrypted) -> Result<Vec<u8>, &'static str> {
+    // Make sure the algorithms match.
+    let alg = cipher.algorithm;
+    (ToAlgorithm::to_algorithm( &key) == alg).ok_or("Algorithms do not match.")?;
+
+    // Make sure identifiers match.
+    (ToIdentifier::to_identifier( &key) == cipher.identifier).ok_or(|_| "Key identifiers do not match.");
+
+    let c = DecodePSF::decode_psf( &cipher.ciphertext)?;
+
+    enc::decrypt( &key, c).map_err(|_| "Error decrypting content.")
 }
 
 pub fn encrypt_bs<T>( rng : &SystemRandom, key : Key, o : T) -> Result<Vec<u8>, &'static str> where T:Serialize {

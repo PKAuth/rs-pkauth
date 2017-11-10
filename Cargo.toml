@@ -5,6 +5,7 @@ authors = ["James Parker <jp@pkauth.com>"]
 
 [dependencies]
 base64="*"
+boolinator="*"
 ring="*"
 ripemd160="*"
 rust-base58="*"
