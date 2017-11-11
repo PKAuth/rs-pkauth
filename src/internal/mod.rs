@@ -53,7 +53,8 @@ pub trait EncodePSF {
 }
 
 pub trait DecodePSF {
-    fn decode_psf( &PSF<Self>) -> Result<Self,&'static str> where Self : Sized;
+    type Algorithm;
+    fn decode_psf( &Self::Algorithm, &PSF<Self>) -> Result<Self,&'static str> where Self : Sized;
 }
 
 pub fn generate_identifier<T>( PSF(raw, _) : PSF<T>) -> PKAIdentifier {

@@ -95,6 +95,11 @@ pub fn encrypt<T>( rng : &SystemRandom, key : Key, o : T) -> Result<PKASymEncryp
     encrypt_content( rng, key, r)
 }
 
+pub fn decrypt<'d, T>( key : Key, cipher : PKASymEncrypted) -> Result<T, &'static str> where T:Deserialize<'d> {
+    let d = decrypt_content( &key, &cipher)?;
+    serde_json::from_slice( &d).map_err(|_| "Error parsing json.")
+}
+
 pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<PKASymEncrypted, &'static str> {
     let ciphertext = enc::encrypt( &rng, &key, msg).map_err(|_| "Error encrypting content.")?;
 
@@ -104,15 +109,15 @@ pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result
     Ok( PKASymEncrypted{ ciphertext : EncodePSF::encode_psf( &ciphertext), identifier : i, algorithm : a})
 }
 
-pub fn decrypt_content( key : Key, cipher : PKASymEncrypted) -> Result<Vec<u8>, &'static str> {
+pub fn decrypt_content( key : &Key, cipher : &PKASymEncrypted) -> Result<Vec<u8>, &'static str> {
     // Make sure the algorithms match.
     let alg = cipher.algorithm;
-    (ToAlgorithm::to_algorithm( &key) == alg).ok_or("Algorithms do not match.")?;
+    (ToAlgorithm::to_algorithm( key) == alg).ok_or("Algorithms do not match.")?;
 
     // Make sure identifiers match.
-    (ToIdentifier::to_identifier( &key) == cipher.identifier).ok_or(|_| "Key identifiers do not match.");
+    (ToIdentifier::to_identifier( key) == cipher.identifier).ok_or("Key identifiers do not match.");
 
-    let c = DecodePSF::decode_psf( &cipher.ciphertext)?;
+    let c = DecodePSF::decode_psf( &alg, &cipher.ciphertext)?;
 
     enc::decrypt( &key, c).map_err(|_| "Error decrypting content.")
 }

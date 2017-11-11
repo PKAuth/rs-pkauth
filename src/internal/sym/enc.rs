@@ -1,9 +1,12 @@
 
+use boolinator::Boolinator;
+use crypto_abstract::sym::enc;
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
+use ring::aead;
 use serde::ser::{Serialize, Serializer};
 use std::marker::PhantomData;
 
-use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier};
+use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF};
 
 impl ToIdentifier for Key {
     fn to_identifier( key : &Key) -> PKAIdentifier {
@@ -55,6 +58,23 @@ impl EncodePSF for CipherText {
                 // TODO: Test this. Correct order? XXX
                 let v = Vec::with_capacity( nonce.len() + ciphertext.len());
                 PSF( v, PhantomData)
+            }
+        }
+    }
+}
+
+impl DecodePSF for CipherText {
+    type Algorithm = enc::Algorithm;
+
+    fn decode_psf( alg : &Algorithm, &PSF( ref psf, _) : &PSF<CipherText>) -> Result<CipherText, &'static str> where Self : Sized {
+        match alg {
+            &Algorithm::SEAesGcm256 => {
+                let l = aead::AES_256_GCM.tag_len();
+                (psf.len() > l).ok_or("Invalid PSF encoded ciphertext.")?;
+
+                let (nonce, cipher) = psf.split_at( l);
+
+                Ok( CipherText::SEAesGcm256( nonce.to_vec(), cipher.to_vec()))
             }
         }
     }
