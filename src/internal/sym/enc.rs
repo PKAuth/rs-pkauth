@@ -4,7 +4,8 @@ use crypto_abstract::sym::enc;
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
 use ring::aead;
 use serde::ser::{Serialize, Serializer};
-use serde::de::{Deserializer};
+use serde::de;
+use serde::de::{Deserialize, Deserializer};
 use std::marker::PhantomData;
 
 use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF};
@@ -53,11 +54,12 @@ impl AlgorithmId for Algorithm {
 // }
 
 pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, S::Error> where S : Serializer {
-    unimplemented!();
+    AlgorithmId::to_algorithm_id( alg).serialize( serializer)
 }
 
 pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
-    unimplemented!();
+    let s = String::deserialize(deserializer)?;
+    AlgorithmId::from_algorithm_id( &s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
 }
 
 impl EncodePSF for CipherText {
