@@ -6,6 +6,7 @@ extern crate ring;
 extern crate ripemd160;
 extern crate rust_base58;
 extern crate serde;
+#[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 

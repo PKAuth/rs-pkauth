@@ -4,6 +4,7 @@ use crypto_abstract::sym::enc;
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
 use ring::aead;
 use serde::ser::{Serialize, Serializer};
+use serde::de::{Deserializer};
 use std::marker::PhantomData;
 
 use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF};
@@ -50,6 +51,14 @@ impl AlgorithmId for Algorithm {
 // impl Deserialize for Algorithm {
 // 
 // }
+
+pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, S::Error> where S : Serializer {
+    unimplemented!();
+}
+
+pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
+    unimplemented!();
+}
 
 impl EncodePSF for CipherText {
     fn encode_psf( cipher : &CipherText) -> PSF<CipherText> {
