@@ -90,21 +90,21 @@ impl Serialize for PKASymEncrypted {
 // encryptContent':
 //      bytestring -> PKAEncrypted -> ByteString
 
-pub fn encrypt<T>( rng : &SystemRandom, key : Key, o : T) -> Result<PKASymEncrypted, &'static str> where T:Serialize {
+pub fn encrypt<T>( rng : &SystemRandom, key : &Key, o : &T) -> Result<PKASymEncrypted, &'static str> where T:Serialize {
     let r = serde_json::to_vec( &o).map_err(|_| "Error generating json.")?;
     encrypt_content( rng, key, r)
 }
 
-pub fn decrypt<T>( key : Key, cipher : PKASymEncrypted) -> Result<T, &'static str> where T:DeserializeOwned {
+pub fn decrypt<T>( key : &Key, cipher : &PKASymEncrypted) -> Result<T, &'static str> where T:DeserializeOwned {
     let d : Vec<u8> = decrypt_content( &key, &cipher)?;
     serde_json::from_slice( &d).map_err(|_| "Error parsing json.")
 }
 
-pub fn encrypt_content( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<PKASymEncrypted, &'static str> {
+pub fn encrypt_content( rng : &SystemRandom, key : &Key, msg : Vec<u8>) -> Result<PKASymEncrypted, &'static str> {
     let ciphertext = enc::encrypt( &rng, &key, msg).map_err(|_| "Error encrypting content.")?;
 
-    let i = ToIdentifier::to_identifier( &key);
-    let a = ToAlgorithm::to_algorithm( &key);
+    let i = ToIdentifier::to_identifier( key);
+    let a = ToAlgorithm::to_algorithm( key);
 
     Ok( PKASymEncrypted{ ciphertext : EncodePSF::encode_psf( &ciphertext), identifier : i, algorithm : a})
 }
@@ -122,14 +122,22 @@ pub fn decrypt_content( key : &Key, cipher : &PKASymEncrypted) -> Result<Vec<u8>
     enc::decrypt( &key, c).map_err(|_| "Error decrypting content.")
 }
 
-pub fn encrypt_bs<T>( rng : &SystemRandom, key : Key, o : T) -> Result<Vec<u8>, &'static str> where T:Serialize {
+pub fn encrypt_bs<T>( rng : &SystemRandom, key : &Key, o : &T) -> Result<Vec<u8>, &'static str> where T:Serialize {
     let r = serde_json::to_vec( &o).map_err(|_| "Error generating json.")?;
     encrypt_content_bs( rng, key, r)
 }
 
-pub fn encrypt_content_bs( rng : &SystemRandom, key : Key, msg : Vec<u8>) -> Result<Vec<u8>, &'static str> {
+// pub fn decrypt_bs<T>( key : &Key, cipher : &Vec<u8>) -> Result<T, &'static str> where T:DeserializeOwned {
+//     
+// }
+
+pub fn encrypt_content_bs( rng : &SystemRandom, key : &Key, msg : Vec<u8>) -> Result<Vec<u8>, &'static str> {
     let encrypted = encrypt_content( rng, key, msg).map_err(|_| "Error encrypting content.")?;
 
     serde_json::to_vec( &encrypted).map_err(|_| "Error converting encrypted content to json.")
 }
 
+// pub fn decrypt_content_bs( key : &Key, cipher : &Vec<u8>) -> Result<Vec<u8>, &'static str> {
+// 
+//     let plain = decrypt_content( key, 
+// }
