@@ -58,8 +58,8 @@ pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, 
 }
 
 pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
-    let s = String::deserialize(deserializer)?;
-    AlgorithmId::from_algorithm_id( &s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
+    let s = <&str>::deserialize(deserializer)?;
+    AlgorithmId::from_algorithm_id( s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
 }
 
 impl EncodePSF for CipherText {
