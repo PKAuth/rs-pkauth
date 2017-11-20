@@ -14,6 +14,7 @@ mod internal;
 pub mod sym;
 
 // Re-exports.
+pub use crypto_abstract::{ToAlgorithm, ToPublicKey};
 pub use internal::{AlgorithmId, ToIdentifier, EncodePSF, DecodePSF, serialize_psf, deserialize_psf}; // decode_psf', deserializePSF' extractDomainName
 
 #[cfg(test)]
