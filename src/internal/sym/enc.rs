@@ -33,7 +33,7 @@ impl DecodePSF for Key {
     fn decode_psf( alg : &Algorithm, &PSF( ref psf, _) : &PSF<Key>) -> Result<Key, &'static str> where Self : Sized {
         match alg {
             &Algorithm::SEAesGcm256 => {
-                (psf.len() == 32).ok_or("Key is wrong length.");
+                (psf.len() == 32).ok_or("Key is wrong length.")?;
 
                 let mut key = [0u8;32];
 
