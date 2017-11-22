@@ -87,7 +87,9 @@ impl EncodePSF for CipherText {
         match cipher {
             &CipherText::SEAesGcm256( ref nonce, ref ciphertext) => {
                 // TODO: Test this. Correct order? XXX
-                let v = Vec::with_capacity( nonce.len() + ciphertext.len());
+                let mut v = Vec::with_capacity( nonce.len() + ciphertext.len());
+                v.extend( nonce.iter());
+                v.extend( ciphertext.iter());
                 PSF( v, PhantomData)
             }
         }
