@@ -3,12 +3,26 @@ use boolinator::Boolinator;
 use crypto_abstract::sym::enc;
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
 use ring::aead;
-use serde::ser::{Serialize, Serializer};
+use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de;
 use serde::de::{Deserialize, Deserializer};
 use std::marker::PhantomData;
 
-use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF};
+use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF, PKAJ};
+
+use ToAlgorithm;
+
+impl<'a> Serialize for PKAJ<&'a Key> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S:Serializer {
+        let mut o = serializer.serialize_struct("Key", 2)?;
+
+        o.serialize_field( "key", &EncodePSF::encode_psf( self.pkaj))?;
+        // let a = serialize_algorithm( &Algorithm::SEAesGcm256, serializer)?;
+        o.serialize_field( "algorithm", AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self.pkaj)))?;
+
+        o.end()
+    }
+}
 
 impl ToIdentifier for Key {
     fn to_identifier( key : &Key) -> PKAIdentifier {

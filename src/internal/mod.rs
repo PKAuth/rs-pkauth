@@ -10,6 +10,12 @@ use serde::de;
 use serde::de::{Deserialize, Deserializer};
 use std::marker::PhantomData;
 
+/// Newtype wrapper for JSON in PKAuth form since we can't create `Serialize` instances due
+/// to orphan instances.
+pub struct PKAJ<T> {
+    pub pkaj : T
+}
+
 pub type PKAIdentifier = String;
 
 pub struct PSF<T> ( Vec<u8>, PhantomData<T>); // JP: PhantomData is annoying. Hopefully we can eventually drop.
