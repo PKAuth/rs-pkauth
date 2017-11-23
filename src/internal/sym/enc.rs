@@ -5,7 +5,8 @@ use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
 use ring::aead;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de;
-use serde::de::{Deserialize, Deserializer};
+use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
+use std::fmt;
 use std::marker::PhantomData;
 
 use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF, PKAJ};
@@ -21,6 +22,53 @@ impl<'a> Serialize for PKAJ<&'a Key> {
         o.serialize_field( "algorithm", AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self.pkaj)))?;
 
         o.end()
+    }
+}
+
+impl<'d> Deserialize<'d> for PKAJ<Key> {
+    fn deserialize<D>( deserializer: D) -> Result<PKAJ<Key>, D::Error> where D : Deserializer<'d> {
+
+        struct V;
+
+        const FIELDS: &'static [&'static str] = &["key","algorithm"];
+
+        impl<'d> Visitor<'d> for V {
+            type Value = PKAJ<Key>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("JSON Key")
+            }
+
+            fn visit_map<U>(self, mut map: U) -> Result<PKAJ<Key>, U::Error> where U: MapAccess<'d> {
+                let mut ident = None;
+                let mut key = None;
+                while let Some(k) = map.next_key::<String>()? {
+                    match k.as_str() {
+                        "algorithm" => {
+                            ident.is_some().ok_or( de::Error::duplicate_field("algorithm"))?;
+                            ident = Some( map.next_value()?);
+                        }
+                        "key" => {
+                            key.is_some().ok_or( de::Error::duplicate_field( "key"))?;
+                            key = Some( map.next_value()?);
+                        }
+                        k => {
+                            Err(de::Error::unknown_field(k, FIELDS))?;
+                        }
+                    }
+                }
+
+                let ident : String = ident.ok_or_else( de::Error::missing_field("algorithm"))?;
+                let key = key.ok_or_else( de::Error::missing_field("key"))?;
+
+                let alg = AlgorithmId::from_algorithm_id( &ident).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
+                let key = DecodePSF::decode_psf( &alg, &key).map_err( de::Error::custom)?;
+
+                Ok( PKAJ{ pkaj: key})
+            }
+        }
+
+        deserializer.deserialize_struct( "Key", FIELDS, V)
     }
 }
 
