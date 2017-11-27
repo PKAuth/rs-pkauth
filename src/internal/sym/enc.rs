@@ -45,11 +45,11 @@ impl<'d> Deserialize<'d> for PKAJ<Key> {
                 while let Some(k) = map.next_key::<String>()? {
                     match k.as_str() {
                         "algorithm" => {
-                            ident.is_some().ok_or( de::Error::duplicate_field("algorithm"))?;
+                            ident.is_none().ok_or( de::Error::duplicate_field("algorithm"))?;
                             ident = Some( map.next_value()?);
                         }
                         "key" => {
-                            key.is_some().ok_or( de::Error::duplicate_field( "key"))?;
+                            key.is_none().ok_or( de::Error::duplicate_field( "key"))?;
                             key = Some( map.next_value()?);
                         }
                         k => {
@@ -58,8 +58,8 @@ impl<'d> Deserialize<'d> for PKAJ<Key> {
                     }
                 }
 
-                let ident : String = ident.ok_or_else( de::Error::missing_field("algorithm"))?;
-                let key = key.ok_or_else( de::Error::missing_field("key"))?;
+                let ident : String = ident.ok_or_else(|| de::Error::missing_field("algorithm"))?;
+                let key = key.ok_or_else(|| de::Error::missing_field("key"))?;
 
                 let alg = AlgorithmId::from_algorithm_id( &ident).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
                 let key = DecodePSF::decode_psf( &alg, &key).map_err( de::Error::custom)?;
