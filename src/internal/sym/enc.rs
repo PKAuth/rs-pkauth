@@ -164,7 +164,7 @@ impl DecodePSF for CipherText {
     fn decode_psf( alg : &Algorithm, &PSF( ref psf, _) : &PSF<CipherText>) -> Result<CipherText, &'static str> where Self : Sized {
         match alg {
             &Algorithm::SEAesGcm256 => {
-                let l = aead::AES_256_GCM.tag_len();
+                let l = 12;
                 (psf.len() > l).ok_or("Invalid PSF encoded ciphertext.")?;
 
                 let (nonce, cipher) = psf.split_at( l);
