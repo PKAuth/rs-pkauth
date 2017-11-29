@@ -7,10 +7,9 @@ use boolinator::Boolinator;
 use crypto_abstract::ToAlgorithm;
 use crypto_abstract::sym::enc;
 pub use crypto_abstract::sym::enc::{gen, derive_key, Key, Algorithm};
-use ring::error::Unspecified;
 use ring::rand::{SystemRandom};
-use serde::ser::{Serialize, Serializer, SerializeStruct};
-use serde::de::{Visitor, MapAccess, DeserializeOwned, Deserializer};
+use serde::ser::{Serialize};
+use serde::de::{DeserializeOwned};
 use serde_json;
 
 use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};

@@ -2,7 +2,6 @@
 use boolinator::Boolinator;
 use crypto_abstract::sym::enc;
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
-use ring::aead;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de;
 use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};

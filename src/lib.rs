@@ -1,3 +1,4 @@
+#![deny(warnings)]
 
 extern crate base64;
 extern crate boolinator;
