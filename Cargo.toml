@@ -6,7 +6,8 @@ authors = ["James Parker <jp@pkauth.com>"]
 [dependencies]
 base64="*"
 boolinator="*"
-ring="*"
+# ring="*"
+ring = {git = "https://github.com/briansmith/ring.git", ref = "8411c0098ac1f8b4b96d0766a5057aae5e78c42a"}
 ripemd160="*"
 rust-base58="*"
 serde="*"
