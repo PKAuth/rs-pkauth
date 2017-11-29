@@ -25,11 +25,11 @@ fn se_manual_tests() {
 }
 
 fn se_manual_test( key_s : &str, cipher_s : &str, plain_s : &str) {
-    print!("********************\n{}\n", cipher_s);
+    // print!("********************\n{}\n", cipher_s);
     let key_b = key_s.to_owned().into_bytes();
     let cipher = cipher_s.to_owned().into_bytes();
     let plain = plain_s.to_owned().into_bytes();
-    print!("********************\n{:?}\n", plain);
+    // print!("********************\n{:?}\n", plain);
     let key_m : PKAJ<se::Key> = serde_json::from_slice( &key_b).unwrap();
     let key : se::Key = key_m.pkaj;
     let dec = se::decrypt_content_bs( &key, &cipher).unwrap();
