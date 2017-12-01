@@ -1,3 +1,7 @@
 
-use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};
-use internal::*;
+// use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};
+// use internal::*;
+
+pub struct PKASigned<a> {
+    
+}

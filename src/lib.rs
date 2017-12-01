@@ -12,6 +12,7 @@ extern crate serde_derive;
 extern crate serde_json;
 
 mod internal;
+pub mod asym;
 pub mod sym;
 
 // Re-exports.

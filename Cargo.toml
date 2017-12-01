@@ -15,6 +15,6 @@ serde_json="*"
 untrusted="^0.6.0"
 crypto-abstract={path="../rs-crypto-abstract"}
 
-[[bin]]
-name = "gen"
-path = "src/bin.rs"
+# [[bin]]
+# name = "gen"
+# path = "src/bin.rs"
