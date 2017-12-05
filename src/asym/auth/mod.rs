@@ -8,7 +8,6 @@ use serde_json;
 
 use internal::{PKAIdentifier, ToIdentifier};
 // use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};
-// use internal::*;
 
 pub struct PKASigned { //<T> {
     content : Vec<u8>,
@@ -33,8 +32,8 @@ pub fn sign<T>( key : &PrivateKey, o : &T) -> Result<PKASigned, &'static str> wh
 
 pub fn sign_content( key : &PrivateKey, message : Vec<u8>) -> Result<PKASigned, &'static str> {
     let signature = auth::sign( &key, &message).map_err(|_| "Error signing content.")?;
-    let identifier = ToIdentifier::to_identifier( &key);
-    let algorithm = ToAlgorithm::to_algorithm( &key);
+    let identifier = ToIdentifier::to_identifier( key);
+    let algorithm = ToAlgorithm::to_algorithm( key);
 
     Ok( PKASigned {
         content : message,
