@@ -2,7 +2,7 @@
 use crypto_abstract::{ToPublicKey};
 use crypto_abstract::asym::auth::{PublicKey, PrivateKey};
 
-use {ToAlgorithm, ToIdentifier};
+use {ToIdentifier};
 use internal::{PKAIdentifier, generate_identifier, EncodePSF, PSF};
 
 impl ToIdentifier for PublicKey {
