@@ -21,30 +21,36 @@ pub type PKAIdentifier = String;
 
 pub struct PSF<T> ( Vec<u8>, PhantomData<T>); // JP: PhantomData is annoying. Hopefully we can eventually drop.
 
-impl<T> Serialize for PSF<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S:Serializer {
-        serialize_psf( self).serialize( serializer)
-    }
+pub fn serialize_psf<S,T>( o : &T, serializer : S) -> Result<S::Ok, S::Error> where S : Serializer, T : EncodePSF {
+    let PSF( content,_) = EncodePSF::encode_psf( o);
+    let s = base64::encode_config( &content, base64::URL_SAFE);
+    s.serialize( serializer)
 }
 
-impl<'d, T> Deserialize<'d> for PSF<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D:Deserializer<'d> {
-        let s = Deserialize::deserialize( deserializer)?;
-
-        deserialize_psf( s).map_err( de::Error::custom)
-    }
-}
-
-pub fn serialize_psf<T>( &PSF( ref content,_) : &PSF<T>) -> String { // Vec<u8> {
-    base64::encode_config( &content, base64::URL_SAFE)
-}
-
-pub fn deserialize_psf<T>( encoded : String) -> Result<PSF<T>, &'static str> {
-    match base64::decode_config( &encoded, base64::URL_SAFE) {
-        Ok(s) => Ok( PSF( s, PhantomData)),
-        Err(_) => Err("invalid Base64Url encoding")
-    }
-}
+// impl<T> Serialize for PSF<T> {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S:Serializer {
+//         serialize_psf( self).serialize( serializer)
+//     }
+// }
+// 
+// impl<'d, T> Deserialize<'d> for PSF<T> {
+//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D:Deserializer<'d> {
+//         let s = Deserialize::deserialize( deserializer)?;
+// 
+//         deserialize_psf( s).map_err( de::Error::custom)
+//     }
+// }
+// 
+// pub fn serialize_psf<T>( &PSF( ref content,_) : &PSF<T>) -> String { // Vec<u8> {
+//     base64::encode_config( &content, base64::URL_SAFE)
+// }
+// 
+// pub fn deserialize_psf<T>( encoded : String) -> Result<PSF<T>, &'static str> {
+//     match base64::decode_config( &encoded, base64::URL_SAFE) {
+//         Ok(s) => Ok( PSF( s, PhantomData)),
+//         Err(_) => Err("invalid Base64Url encoding")
+//     }
+// }
 
 pub trait AlgorithmId {
     fn to_algorithm_id( &Self) -> &'static str;

@@ -16,9 +16,11 @@ use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};
 use internal::*;
 use internal::sym::enc::*;
 
-#[derive(Serialize, Deserialize)]
+// #[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct PKASymEncrypted {
-    ciphertext : PSF<enc::CipherText>,
+    #[serde(serialize_with = "serialize_psf")]
+    ciphertext : enc::CipherText,
     identifier : PKAIdentifier,
     #[serde(deserialize_with = "deserialize_algorithm", serialize_with = "serialize_algorithm")]
     algorithm : Algorithm
@@ -28,7 +30,7 @@ pub struct PKASymEncrypted {
 //     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
 //         let mut s = serializer.serialize_struct("PKASymEncrypted", 3)?;
 //         s.serialize_field( "ciphertext", &self.ciphertext)?;
-//         s.serialize_field( "identifier", &self.identifier)?;
+//         s.serialize_with serialize_field( "identifier", &self.identifier)?;
 //         let a = AlgorithmId::to_algorithm_id( &self.algorithm);
 //         s.serialize_field( "algorithm", a)?;
 // 

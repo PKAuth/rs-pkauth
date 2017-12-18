@@ -108,6 +108,7 @@ impl DecodePSF for Key {
         }
     }
 }
+
 impl AlgorithmId for Algorithm {
     fn to_algorithm_id( alg : &Algorithm) -> &'static str {
         match *alg {
