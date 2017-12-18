@@ -1,7 +1,7 @@
 
+use boolinator::Boolinator;
 use crypto_abstract::ToAlgorithm;
 use crypto_abstract::asym::auth;
-use crypto_abstract::asym::auth::{Signature};
 pub use crypto_abstract::asym::auth::{Algorithm, PublicKey, PrivateKey, gen};
 use serde::ser::{Serialize};
 use serde_json;
@@ -10,8 +10,8 @@ use internal::{PKAIdentifier, ToIdentifier};
 // use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};
 
 pub struct PKASigned { //<T> {
-    content : Vec<u8>,
-    signature : Signature,
+    content : Vec<u8>, // JP: Base64 newtype wrapper??
+    signature : auth::Signature,
     key_identifier : PKAIdentifier,
     algorithm : Algorithm
 }
@@ -50,6 +50,18 @@ pub fn sign_content( key : &PrivateKey, message : Vec<u8>) -> Result<PKASigned, 
         key_identifier : identifier,
         algorithm : algorithm
     })
+}
+
+pub fn verify_content( key : &PublicKey, signed : &PKASigned) -> Result<Vec<u8>, &'static str> {
+    // Check that the algorithm matches.
+    let alg = &signed.algorithm;
+    (&ToAlgorithm::to_algorithm( key) == alg).ok_or("Algorithms do not match.")?;
+
+    // Check that the identifier matches.
+    (ToIdentifier::to_identifier( key) == signed.key_identifier).ok_or("Key identifiers do not match.")?;
+
+
+    unimplemented!();
 }
 
 pub fn sign_bs<T>(_key : &PrivateKey, _o : &T) -> Result<Vec<u8>, &'static str>
