@@ -8,7 +8,7 @@ use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
 use std::fmt;
 use std::marker::PhantomData;
 
-use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF, PKAJ};
+use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF, PKAJ, serialize_psf, deserialize_psf};
 
 use ToAlgorithm;
 
@@ -16,7 +16,7 @@ impl<'a> Serialize for PKAJ<&'a Key> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S:Serializer {
         let mut o = serializer.serialize_struct("Key", 2)?;
 
-        o.serialize_field( "key", &EncodePSF::encode_psf( self.pkaj))?;
+        o.serialize_field( "key", &serialize_psf( self.pkaj))?;
         // let a = serialize_algorithm( &Algorithm::SEAesGcm256, serializer)?;
         o.serialize_field( "algorithm", AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self.pkaj)))?;
 
@@ -61,7 +61,7 @@ impl<'d> Deserialize<'d> for PKAJ<Key> {
                 let key = key.ok_or_else(|| de::Error::missing_field("key"))?;
 
                 let alg = AlgorithmId::from_algorithm_id( &ident).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
-                let key = DecodePSF::decode_psf( &alg, &key).map_err( de::Error::custom)?;
+                let key = deserialize_psf( &alg, &key)?;
 
                 Ok( PKAJ{ pkaj: key})
             }
