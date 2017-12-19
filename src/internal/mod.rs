@@ -7,7 +7,6 @@ use ring::digest::{digest, SHA256};
 use ripemd160::{Ripemd160, Digest};
 use rust_base58::base58::{ToBase58};
 use serde::ser::{Serialize, Serializer};
-use std::marker::PhantomData;
 
 /// Newtype wrapper for JSON in PKAuth form since we can't create `Serialize` instances due
 /// to orphan instances.
@@ -17,10 +16,6 @@ pub struct PKAJ<T> {
 
 pub type PKAIdentifier = String;
 
-pub struct PSF<T> ( Vec<u8>, PhantomData<T>); 
-// JP: PhantomData is annoying. Hopefully we can eventually drop.
-// JP: Should we just drop this type?
-
 // JP: Can we revert back to this version of serialize_psf?
 // pub fn serialize_psf<S,T>( o : &T, serializer : S) -> Result<S::Ok, S::Error> where S : Serializer, T : EncodePSF {
 pub fn serialize_psf_old<S,T>( o : &T, serializer : S) -> Result<S::Ok, S::Error> where S : Serializer, T : EncodePSF {
@@ -29,7 +24,7 @@ pub fn serialize_psf_old<S,T>( o : &T, serializer : S) -> Result<S::Ok, S::Error
 }
 
 pub fn serialize_psf<T>( o : &T) -> String where T : EncodePSF {
-    let PSF( content,_) = EncodePSF::encode_psf( o);
+    let content = EncodePSF::encode_psf( o);
     let s = base64::encode_config( &content, base64::URL_SAFE);
     s
 }
@@ -37,7 +32,7 @@ pub fn serialize_psf<T>( o : &T) -> String where T : EncodePSF {
 // JP: How do we return an error (de::Error::custom)?
 pub fn deserialize_psf<T>( algorithm : &T::Algorithm, s : &String) -> Result<T,&'static str> where T : DecodePSF {
     let ciphertext = base64::decode_config( &s, base64::URL_SAFE).map_err(|_| "invalid Base64Url encoding")?;
-    DecodePSF::decode_psf( algorithm, &PSF(ciphertext, PhantomData))
+    DecodePSF::decode_psf( algorithm, &ciphertext)
 }
 
 // impl<T> Serialize for PSF<T> {
@@ -75,15 +70,15 @@ pub trait ToIdentifier {
 }
 
 pub trait EncodePSF {
-    fn encode_psf( &Self) -> PSF<Self> where Self : Sized;
+    fn encode_psf( &Self) -> Vec<u8> where Self : Sized;
 }
 
 pub trait DecodePSF {
     type Algorithm;
-    fn decode_psf( &Self::Algorithm, &PSF<Self>) -> Result<Self,&'static str> where Self : Sized;
+    fn decode_psf( &Self::Algorithm, &Vec<u8>) -> Result<Self,&'static str> where Self : Sized;
 }
 
-pub fn generate_identifier<T>( PSF(raw, _) : PSF<T>) -> PKAIdentifier {
+pub fn generate_identifier( raw : Vec<u8>) -> PKAIdentifier {
     let mut hash = ripemd160( &sha256( &raw));
     let checksum = checksum_identifier( &hash);
     hash.extend( checksum);

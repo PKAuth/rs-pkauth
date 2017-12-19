@@ -6,9 +6,8 @@ use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de;
 use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
 use std::fmt;
-use std::marker::PhantomData;
 
-use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF, PKAJ, serialize_psf, deserialize_psf};
+use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, EncodePSF, generate_identifier, DecodePSF, PKAJ, serialize_psf, deserialize_psf};
 
 use ToAlgorithm;
 
@@ -78,11 +77,11 @@ impl ToIdentifier for Key {
 }
 
 impl EncodePSF for Key {
-    fn encode_psf( key : &Key) -> PSF<Key> {
+    fn encode_psf( key : &Key) -> Vec<u8> {
         match *key {
             Key::SEAesGcm256( key) =>
                 // TODO: Test this XXX
-                PSF( key.to_vec(), PhantomData)
+                key.to_vec()
         }
     }
 }
@@ -90,7 +89,7 @@ impl EncodePSF for Key {
 impl DecodePSF for Key {
     type Algorithm = enc::Algorithm;
 
-    fn decode_psf( alg : &Algorithm, &PSF( ref psf, _) : &PSF<Key>) -> Result<Key, &'static str> where Self : Sized {
+    fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<Key, &'static str> where Self : Sized {
         match alg {
             &Algorithm::SEAesGcm256 => {
                 (psf.len() == 32).ok_or("Key is wrong length.")?;
@@ -144,14 +143,14 @@ impl AlgorithmId for Algorithm {
 // }
 
 impl EncodePSF for CipherText {
-    fn encode_psf( cipher : &CipherText) -> PSF<CipherText> {
+    fn encode_psf( cipher : &CipherText) -> Vec<u8> {
         match cipher {
             &CipherText::SEAesGcm256( ref nonce, ref ciphertext) => {
                 // TODO: Test this. Correct order? XXX
                 let mut v = Vec::with_capacity( nonce.len() + ciphertext.len());
                 v.extend( nonce.iter());
                 v.extend( ciphertext.iter());
-                PSF( v, PhantomData)
+                v
             }
         }
     }
@@ -160,7 +159,7 @@ impl EncodePSF for CipherText {
 impl DecodePSF for CipherText {
     type Algorithm = enc::Algorithm;
 
-    fn decode_psf( alg : &Algorithm, &PSF( ref psf, _) : &PSF<CipherText>) -> Result<CipherText, &'static str> where Self : Sized {
+    fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<CipherText, &'static str> where Self : Sized {
         match alg {
             &Algorithm::SEAesGcm256 => {
                 let l = 12;

@@ -3,7 +3,7 @@ use crypto_abstract::{ToPublicKey};
 use crypto_abstract::asym::auth::{PublicKey, PrivateKey};
 
 use {ToIdentifier};
-use internal::{PKAIdentifier, generate_identifier, EncodePSF, PSF};
+use internal::{PKAIdentifier, generate_identifier, EncodePSF};
 
 impl ToIdentifier for PublicKey {
     fn to_identifier( key : &PublicKey) -> PKAIdentifier {
@@ -20,7 +20,7 @@ impl ToIdentifier for PrivateKey {
 }
 
 impl EncodePSF for PublicKey {
-    fn encode_psf( _ : &PublicKey) -> PSF<PublicKey> {
+    fn encode_psf( _ : &PublicKey) -> Vec<u8> {
         unimplemented!()
     }
 }
