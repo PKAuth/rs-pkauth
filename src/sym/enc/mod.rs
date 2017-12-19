@@ -16,7 +16,6 @@ use std::fmt;
 
 use internal::{PKAIdentifier};
 use internal::*;
-use internal::sym::enc::*;
 
 // #[derive(Serialize, Deserialize)]
 #[derive(Serialize)]
@@ -24,8 +23,14 @@ pub struct PKASymEncrypted {
     #[serde(serialize_with = "serialize_psf_old")]
     ciphertext : enc::CipherText,
     identifier : PKAIdentifier,
-    #[serde(deserialize_with = "deserialize_algorithm", serialize_with = "serialize_algorithm")]
-    algorithm : Algorithm // JP: We could drop this field too since it's represented in ciphertext as well. 
+}
+
+impl ToAlgorithm for PKASymEncrypted {
+    type Algorithm = Algorithm;
+
+    fn to_algorithm( &self) -> Self::Algorithm {
+        ToAlgorithm::to_algorithm( &self.ciphertext)
+    }
 }
 
 impl<'d> Deserialize<'d> for PKASymEncrypted {
@@ -74,7 +79,7 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
                 let algorithm = AlgorithmId::from_algorithm_id( &algorithm).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
                 let ciphertext = deserialize_psf( &algorithm, &ciphertext).map_err(de::Error::custom)?;
 
-                Ok( PKASymEncrypted{ algorithm : algorithm, ciphertext : ciphertext, identifier : identifier})
+                Ok( PKASymEncrypted{ ciphertext : ciphertext, identifier : identifier})
             }
         }
 
@@ -163,15 +168,14 @@ pub fn encrypt_content( rng : &SystemRandom, key : &Key, msg : Vec<u8>) -> Resul
     let ciphertext = enc::encrypt( &rng, &key, msg).map_err(|_| "Error encrypting content.")?;
 
     let i = ToIdentifier::to_identifier( key);
-    let a = ToAlgorithm::to_algorithm( key);
 
-    Ok( PKASymEncrypted{ ciphertext : ciphertext, identifier : i, algorithm : a})
+    Ok( PKASymEncrypted{ ciphertext : ciphertext, identifier : i})
 }
 
 pub fn decrypt_content( key : &Key, cipher : PKASymEncrypted) -> Result<Vec<u8>, &'static str> {
     // Make sure the algorithms match.
-    let alg = &cipher.algorithm;
-    (&ToAlgorithm::to_algorithm( key) == alg).ok_or("Algorithms do not match.")?;
+    let alg = ToAlgorithm::to_algorithm( &cipher);
+    (ToAlgorithm::to_algorithm( key) == alg).ok_or("Algorithms do not match.")?;
 
     // Make sure identifiers match.
     (&ToIdentifier::to_identifier( key) == &cipher.identifier).ok_or("Key identifiers do not match.")?;

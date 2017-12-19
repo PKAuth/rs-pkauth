@@ -134,10 +134,10 @@ impl AlgorithmId for Algorithm {
 // 
 // }
 
-pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, S::Error> where S : Serializer {
-    AlgorithmId::to_algorithm_id( alg).serialize( serializer)
-}
-
+// pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, S::Error> where S : Serializer {
+//     AlgorithmId::to_algorithm_id( alg).serialize( serializer)
+// }
+// 
 // pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
 //     let s = <&str>::deserialize(deserializer)?;
 //     AlgorithmId::from_algorithm_id( s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
