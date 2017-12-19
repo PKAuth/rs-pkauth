@@ -17,7 +17,6 @@ impl<'a> Serialize for PKAJ<&'a Key> {
         let mut o = serializer.serialize_struct("Key", 2)?;
 
         o.serialize_field( "key", &serialize_psf( self.pkaj))?;
-        // let a = serialize_algorithm( &Algorithm::SEAesGcm256, serializer)?;
         o.serialize_field( "algorithm", AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self.pkaj)))?;
 
         o.end()
@@ -61,7 +60,7 @@ impl<'d> Deserialize<'d> for PKAJ<Key> {
                 let key = key.ok_or_else(|| de::Error::missing_field("key"))?;
 
                 let alg = AlgorithmId::from_algorithm_id( &ident).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
-                let key = deserialize_psf( &alg, &key)?;
+                let key = deserialize_psf( &alg, &key).map_err(de::Error::custom)?;
 
                 Ok( PKAJ{ pkaj: key})
             }
@@ -139,10 +138,10 @@ pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, 
     AlgorithmId::to_algorithm_id( alg).serialize( serializer)
 }
 
-pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
-    let s = <&str>::deserialize(deserializer)?;
-    AlgorithmId::from_algorithm_id( s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
-}
+// pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
+//     let s = <&str>::deserialize(deserializer)?;
+//     AlgorithmId::from_algorithm_id( s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
+// }
 
 impl EncodePSF for CipherText {
     fn encode_psf( cipher : &CipherText) -> PSF<CipherText> {

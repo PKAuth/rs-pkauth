@@ -9,17 +9,19 @@ use crypto_abstract::sym::enc;
 pub use crypto_abstract::sym::enc::{gen, derive_key, Key, Algorithm};
 use ring::rand::{SystemRandom};
 use serde::ser::{Serialize};
+use serde::de;
 use serde::de::{Deserialize, Deserializer, DeserializeOwned, Visitor, MapAccess};
 use serde_json;
+use std::fmt;
 
-use internal::{PKAIdentifier, EncodePSF, DecodePSF};
+use internal::{PKAIdentifier};
 use internal::*;
 use internal::sym::enc::*;
 
 // #[derive(Serialize, Deserialize)]
 #[derive(Serialize)]
 pub struct PKASymEncrypted {
-    #[serde(serialize_with = "serialize_psf")]
+    #[serde(serialize_with = "serialize_psf_old")]
     ciphertext : enc::CipherText,
     identifier : PKAIdentifier,
     #[serde(deserialize_with = "deserialize_algorithm", serialize_with = "serialize_algorithm")]
@@ -59,6 +61,9 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
                             algorithm.is_none().ok_or( de::Error::duplicate_field("algorithm"))?;
                             algorithm = Some( map.next_value()?);
                         }
+                        k => {
+                            Err(de::Error::unknown_field(k, FIELDS))?;
+                        }
                     }
                 }
 
@@ -67,7 +72,7 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
                 let algorithm : String = algorithm.ok_or_else(|| de::Error::missing_field("algorithm"))?;
 
                 let algorithm = AlgorithmId::from_algorithm_id( &algorithm).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
-                let ciphertext = deserialize_psf( &algorithm, &ciphertext)?;
+                let ciphertext = deserialize_psf( &algorithm, &ciphertext).map_err(de::Error::custom)?;
 
                 Ok( PKASymEncrypted{ algorithm : algorithm, ciphertext : ciphertext, identifier : identifier})
             }
@@ -149,8 +154,8 @@ pub fn encrypt<T>( rng : &SystemRandom, key : &Key, o : &T) -> Result<PKASymEncr
     encrypt_content( rng, key, r)
 }
 
-pub fn decrypt<T>( key : &Key, cipher : &PKASymEncrypted) -> Result<T, &'static str> where T:DeserializeOwned {
-    let d : Vec<u8> = decrypt_content( &key, &cipher)?;
+pub fn decrypt<T>( key : &Key, cipher : PKASymEncrypted) -> Result<T, &'static str> where T:DeserializeOwned {
+    let d : Vec<u8> = decrypt_content( &key, cipher)?;
     serde_json::from_slice( &d).map_err(|_| "Error parsing json.")
 }
 
@@ -163,7 +168,7 @@ pub fn encrypt_content( rng : &SystemRandom, key : &Key, msg : Vec<u8>) -> Resul
     Ok( PKASymEncrypted{ ciphertext : ciphertext, identifier : i, algorithm : a})
 }
 
-pub fn decrypt_content( key : &Key, cipher : &PKASymEncrypted) -> Result<Vec<u8>, &'static str> {
+pub fn decrypt_content( key : &Key, cipher : PKASymEncrypted) -> Result<Vec<u8>, &'static str> {
     // Make sure the algorithms match.
     let alg = &cipher.algorithm;
     (&ToAlgorithm::to_algorithm( key) == alg).ok_or("Algorithms do not match.")?;
@@ -181,7 +186,7 @@ pub fn encrypt_bs<T>( rng : &SystemRandom, key : &Key, o : &T) -> Result<Vec<u8>
 
 pub fn decrypt_bs<T>( key : &Key, cipher : &Vec<u8>) -> Result<T, &'static str> where T:DeserializeOwned {
     let se = serde_json::from_slice( cipher).map_err(|_| "Error decoding encrypted content.")?;
-    decrypt( key, &se)
+    decrypt( key, se)
 }
 
 pub fn encrypt_content_bs( rng : &SystemRandom, key : &Key, msg : Vec<u8>) -> Result<Vec<u8>, &'static str> {
@@ -192,5 +197,5 @@ pub fn encrypt_content_bs( rng : &SystemRandom, key : &Key, msg : Vec<u8>) -> Re
 
 pub fn decrypt_content_bs( key : &Key, cipher : &Vec<u8>) -> Result<Vec<u8>, &'static str> {
     let se = serde_json::from_slice( cipher).map_err(|_| "Error decoding encrypted content.")?;
-    decrypt_content( key, &se)
+    decrypt_content( key, se)
 }

@@ -7,8 +7,6 @@ use ring::digest::{digest, SHA256};
 use ripemd160::{Ripemd160, Digest};
 use rust_base58::base58::{ToBase58};
 use serde::ser::{Serialize, Serializer};
-use serde::de;
-use serde::de::{Deserialize, Deserializer, MapAccess};
 use std::marker::PhantomData;
 
 /// Newtype wrapper for JSON in PKAuth form since we can't create `Serialize` instances due
@@ -23,15 +21,23 @@ pub struct PSF<T> ( Vec<u8>, PhantomData<T>);
 // JP: PhantomData is annoying. Hopefully we can eventually drop.
 // JP: Should we just drop this type?
 
-pub fn serialize_psf<S,T>( o : &T, serializer : S) -> Result<S::Ok, S::Error> where S : Serializer, T : EncodePSF {
-    let PSF( content,_) = EncodePSF::encode_psf( o);
-    let s = base64::encode_config( &content, base64::URL_SAFE);
+// JP: Can we revert back to this version of serialize_psf?
+// pub fn serialize_psf<S,T>( o : &T, serializer : S) -> Result<S::Ok, S::Error> where S : Serializer, T : EncodePSF {
+pub fn serialize_psf_old<S,T>( o : &T, serializer : S) -> Result<S::Ok, S::Error> where S : Serializer, T : EncodePSF {
+    let s = serialize_psf( o);
     s.serialize( serializer)
 }
 
-pub fn deserialize_psf<'d,T,U>( algorithm : &T::Algorithm, s : &String) -> Result<T,U::Error> where T : DecodePSF, U : MapAccess<'d> {
-    let ciphertext = base64::decode_config( &s, base64::URL_SAFE).map_err(|_| de::Error::custom("invalid Base64Url encoding"))?;
-    DecodePSF::decode_psf( &algorithm, &PSF(ciphertext, PhantomData)).map_err(de::Error::custom)
+pub fn serialize_psf<T>( o : &T) -> String where T : EncodePSF {
+    let PSF( content,_) = EncodePSF::encode_psf( o);
+    let s = base64::encode_config( &content, base64::URL_SAFE);
+    s
+}
+
+// JP: How do we return an error (de::Error::custom)?
+pub fn deserialize_psf<T>( algorithm : &T::Algorithm, s : &String) -> Result<T,&'static str> where T : DecodePSF {
+    let ciphertext = base64::decode_config( &s, base64::URL_SAFE).map_err(|_| "invalid Base64Url encoding")?;
+    DecodePSF::decode_psf( algorithm, &PSF(ciphertext, PhantomData))
 }
 
 // impl<T> Serialize for PSF<T> {
