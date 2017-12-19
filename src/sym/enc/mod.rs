@@ -8,7 +8,7 @@ use crypto_abstract::ToAlgorithm;
 use crypto_abstract::sym::enc;
 pub use crypto_abstract::sym::enc::{gen, derive_key, Key, Algorithm};
 use ring::rand::{SystemRandom};
-use serde::ser::{Serialize};
+use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de;
 use serde::de::{Deserialize, Deserializer, DeserializeOwned, Visitor, MapAccess};
 use serde_json;
@@ -18,11 +18,9 @@ use internal::{PKAIdentifier};
 use internal::*;
 
 // #[derive(Serialize, Deserialize)]
-#[derive(Serialize)]
 pub struct PKASymEncrypted {
-    #[serde(serialize_with = "serialize_psf_old")]
     ciphertext : enc::CipherText,
-    identifier : PKAIdentifier,
+    identifier : PKAIdentifier
 }
 
 impl ToAlgorithm for PKASymEncrypted {
@@ -87,17 +85,18 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
     }
 }
 
-// impl Serialize for PKASymEncrypted {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-//         let mut s = serializer.serialize_struct("PKASymEncrypted", 3)?;
-//         s.serialize_field( "ciphertext", &self.ciphertext)?;
-//         s.serialize_with serialize_field( "identifier", &self.identifier)?;
-//         let a = AlgorithmId::to_algorithm_id( &self.algorithm);
-//         s.serialize_field( "algorithm", a)?;
-// 
-//         s.end()
-//     }
-// }
+impl Serialize for PKASymEncrypted {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        let mut s = serializer.serialize_struct("PKASymEncrypted", 3)?;
+
+        s.serialize_field( "ciphertext", &serialize_psf( &self.ciphertext))?;
+        s.serialize_field( "identifier", &self.identifier)?;
+        let a = AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self));
+        s.serialize_field( "algorithm", a)?;
+
+        s.end()
+    }
+}
 
 // impl Serialize for PKASymEncrypted {
 //     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
