@@ -146,8 +146,7 @@ pub fn verify_content( key : &PublicKey, signed : PKASigned) -> Result<Vec<u8>, 
     Ok( signed.content)
 }
 
-pub fn sign_bs<T>( key : &PrivateKey, o : &T) -> Result<Vec<u8>, &'static str>
-where T:Serialize {
+pub fn sign_bs<T>( key : &PrivateKey, o : &T) -> Result<Vec<u8>, &'static str> where T:Serialize {
     let v = serde_json::to_vec( &o).map_err(|_| "Error generating json.")?;
     sign_content_bs( key, v)
 }
@@ -157,14 +156,12 @@ pub fn verify_bs<T>( key : &PublicKey, signed : Vec<u8>) -> Result<T, &'static s
     serde_json::from_slice( &bs).map_err(|_| "Invalid json encoding.")
 }
 
-pub fn sign_content_bs( key :&PrivateKey, message : Vec<u8>) -> Result<Vec<u8>,
-&'static str> {
+pub fn sign_content_bs( key :&PrivateKey, message : Vec<u8>) -> Result<Vec<u8>, &'static str> {
 	let signed = sign_content( key, message)?;
     serde_json::to_vec( &signed).map_err(|_| "Error generating json.")
 }
 
-pub fn verify_content_bs(pub_key : &PublicKey, signed : Vec<u8>) ->
-Result<Vec<u8>, &'static str>{
+pub fn verify_content_bs(pub_key : &PublicKey, signed : Vec<u8>) -> Result<Vec<u8>, &'static str> {
     let signed = serde_json::from_slice( &signed).map_err(|_| "Invalid encoding.")?;
     verify_content( pub_key, signed)
 }
