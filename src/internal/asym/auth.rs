@@ -141,29 +141,89 @@ impl ToIdentifier for PrivateKey {
     }
 }
 
+const PRIVATEKEYPOSITION : usize = 16;
+const PRIVATEKEYLENGTH : usize = 32;
+const PUBLICKEYPOSITION : usize = 53;
+const PUBLICKEYLENGTH : usize = 32;
+
 impl EncodePSF for PrivateKey {
-    fn encode_psf( _ : &PrivateKey) -> Vec<u8> {
+    fn encode_psf( private_key : &PrivateKey) -> Vec<u8> {
+        match *private_key {
+            PrivateKey::AAEd25519( private_key) => {
                 // Big endian?
                 //
                 // k - 32 bytes
                 // A - 32 bytes
                 // TODO: Verify this
 
-        unimplemented!()
+                let mut key = [0; PRIVATEKEYLENGTH + PUBLICKEYLENGTH];
+
+                // Copy over k components.
+                {
+                    let k = &private_key[PRIVATEKEYPOSITION .. PRIVATEKEYPOSITION+PRIVATEKEYLENGTH];
+                    let k_new = &mut key[0 .. PRIVATEKEYLENGTH];
+                    for (place, element) in k_new.iter_mut().zip( k.into_iter()) {
+                        *place = *element;
+                    }
+                }
+
+                // Copy over A components.
+                {
+                    let a = &private_key[PUBLICKEYPOSITION .. PUBLICKEYPOSITION+PUBLICKEYLENGTH];
+                    let a_new = &mut key[ PRIVATEKEYLENGTH .. PRIVATEKEYLENGTH+PUBLICKEYLENGTH];
+                    for (place, element) in a_new.iter_mut().zip( a.into_iter()) {
+                        *place = *element;
+                    }
+                }
+
+                // TODO: test this XXX
+                key.to_vec()
+            }
+        }
     }
 }
 
 impl DecodePSF for PrivateKey {
     type Algorithm = Algorithm;
 
-    fn decode_psf( _alg : &Algorithm, _psf : &Vec<u8>) -> Result<PrivateKey, &'static str> where Self : Sized {
-        unimplemented!()
+    fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<PrivateKey, &'static str> where Self : Sized {
+        match *alg {
+            Algorithm::AAEd25519 => {
+                (psf.len() == PUBLICKEYLENGTH + PRIVATEKEYLENGTH).ok_or("Private key is wrong length.")?;
+
+                // Prefill key with pkcs8 constants (used by ring).
+                let mut key : [u8; 85] = [ 
+                      0x30, 0x53, 0x02, 0x01, 0x01, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20
+                    , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                    , 0xa1, 0x23, 0x03, 0x21, 0x00
+                    , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                    ];
+
+                // Copy over k.
+                {
+                    let k = &psf[0 .. PRIVATEKEYLENGTH];
+                    let k_new = &mut key[PRIVATEKEYPOSITION .. PRIVATEKEYPOSITION+PRIVATEKEYLENGTH];
+                    for (place, element) in k_new.iter_mut().zip( k) {
+                        *place = *element;
+                    }
+                }
+
+                // Copy over A.
+                {
+                    let a = &psf[PRIVATEKEYLENGTH .. PRIVATEKEYLENGTH+PUBLICKEYLENGTH];
+                    let a_new = &mut key[PUBLICKEYPOSITION .. PUBLICKEYPOSITION+PUBLICKEYLENGTH];
+                    for (place, element) in a_new.iter_mut().zip( a) {
+                        *place = *element;
+                    }
+                }
+                
+                Ok( PrivateKey::AAEd25519( key))
+            }
+        }
     }
 }
 
 // JP: Should we get these constants from crypto-abstract? I don't want to expose them there though.
-
-const PUBLICKEYLENGTH : usize = 32;
 
 impl EncodePSF for PublicKey {
     fn encode_psf( public_key : &PublicKey) -> Vec<u8> {
