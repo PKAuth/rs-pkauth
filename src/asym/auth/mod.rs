@@ -30,10 +30,10 @@ impl Serialize for PKASigned {
     fn serialize<S>( &self, serializer: S) -> Result<S::Ok,S::Error> where S : Serializer {
         let mut s = serializer.serialize_struct("PKASigned", 4)?;
 
-        s.serialize_field( "content", &serialize_base64url( &self.content));
-        s.serialize_field( "signature", &serialize_psf( &self.signature));
-        s.serialize_field( "identifier", &self.identifier);
-        s.serialize_field( "algorithm", &AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self)));
+        s.serialize_field( "content", &serialize_base64url( &self.content))?;
+        s.serialize_field( "signature", &serialize_psf( &self.signature))?;
+        s.serialize_field( "identifier", &self.identifier)?;
+        s.serialize_field( "algorithm", &AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self)))?;
 
         s.end()
     }

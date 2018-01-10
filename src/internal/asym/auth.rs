@@ -1,6 +1,9 @@
 
+// Helpful reference for existing key encodings: https://blog.mozilla.org/warner/2011/11/29/ed25519-keys/
+
 use boolinator::Boolinator;
 use crypto_abstract::{ToPublicKey};
+// use crypto_abstract::internal::asym::auth::ed25519;
 use crypto_abstract::asym::auth::{PublicKey, PrivateKey, Algorithm, Signature};
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de;
@@ -140,6 +143,12 @@ impl ToIdentifier for PrivateKey {
 
 impl EncodePSF for PrivateKey {
     fn encode_psf( _ : &PrivateKey) -> Vec<u8> {
+                // Big endian?
+                //
+                // k - 32 bytes
+                // A - 32 bytes
+                // TODO: Verify this
+
         unimplemented!()
     }
 }
@@ -147,14 +156,27 @@ impl EncodePSF for PrivateKey {
 impl DecodePSF for PrivateKey {
     type Algorithm = Algorithm;
 
-    fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<PrivateKey, &'static str> where Self : Sized {
+    fn decode_psf( _alg : &Algorithm, _psf : &Vec<u8>) -> Result<PrivateKey, &'static str> where Self : Sized {
         unimplemented!()
     }
 }
 
+// JP: Should we get these constants from crypto-abstract? I don't want to expose them there though.
+
+const PUBLICKEYLENGTH : usize = 32;
+
 impl EncodePSF for PublicKey {
-    fn encode_psf( _ : &PublicKey) -> Vec<u8> {
-        unimplemented!()
+    fn encode_psf( public_key : &PublicKey) -> Vec<u8> {
+        match *public_key {
+            PublicKey::AAEd25519( public_key) => {
+                // Big endian?
+                //
+                // A - 32 bytes
+                // TODO: Verify this
+
+                public_key.as_ref().to_vec()
+            }
+        }
     }
 }
 
@@ -162,13 +184,37 @@ impl DecodePSF for PublicKey {
     type Algorithm = Algorithm;
 
     fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<PublicKey, &'static str> where Self : Sized {
-        unimplemented!()
+        match *alg {
+            Algorithm::AAEd25519 => {
+                (psf.len() == PUBLICKEYLENGTH).ok_or( "Public key is wrong length")?;
+
+                let mut public_key = [0u8; PUBLICKEYLENGTH];
+                for (place, element) in public_key.iter_mut().zip( psf.into_iter()) {
+                    *place = *element;
+                }
+
+                Ok( PublicKey::AAEd25519( public_key))
+            }
+        }
     }
 }
 
+const SIGNATURELENGTH : usize = 64;
+
 impl EncodePSF for Signature {
-    fn encode_psf( _ : &Signature) -> Vec<u8> {
-        unimplemented!()
+    fn encode_psf( signature : &Signature) -> Vec<u8> {
+        match *signature {
+            Signature::AAEd25519( signature) => {
+                // Big endian?
+                //
+                // R - 32 bytes
+                // S - 32 bytes
+                // TODO: Verify this
+
+                signature.as_ref().to_vec()
+            }
+        }
+
     }
 }
 
@@ -176,7 +222,19 @@ impl DecodePSF for Signature {
     type Algorithm = Algorithm;
 
     fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<Signature, &'static str> where Self : Sized {
-        unimplemented!()
+        match alg {
+            &Algorithm::AAEd25519 => {
+                (psf.len() == SIGNATURELENGTH).ok_or( "Signature is wrong length")?;
+
+                let mut signature = [0u8; SIGNATURELENGTH];
+                for (place, element) in signature.iter_mut().zip( psf.into_iter()) {
+                    *place = *element;
+                }
+
+                // TODO: test this XXX
+                Ok( Signature::AAEd25519( signature))
+            }
+        }
     }
 }
 
