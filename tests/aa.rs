@@ -1,8 +1,32 @@
 extern crate pkauth;
 extern crate serde_json;
 
+use pkauth::{ToPublicKey};
 use pkauth::asym::auth as aa;
 use pkauth::{PKAJ};
+
+
+fn aa_manual_test(priv_key : &str, pub_key : &str, content : Vec<u8>, s_content :
+&str){
+    let priv_key = priv_key.to_owned().into_bytes();
+    let pub_key = pub_key.to_owned().into_bytes();
+    let s_content = s_content.to_owned().into_bytes();
+
+    let priv_key : PKAJ<aa::PrivateKey> = serde_json::from_slice( &priv_key).unwrap(); // .pkaj;
+    let priv_key = priv_key.pkaj;
+
+    let pub_key : PKAJ<aa::PublicKey> = serde_json::from_slice( &pub_key).unwrap(); // .pkaj;
+    let pub_key = pub_key.pkaj;
+
+    let s_content : aa::PKASigned = serde_json::from_slice( &s_content).unwrap();
+
+    // Verify public key and private key are pairs.
+    assert_eq!( pub_key, ToPublicKey::to_public_key( &priv_key));
+
+    // Verify signature.
+    let verified = aa::verify_content( &pub_key, s_content).unwrap();
+    assert_eq!( verified, content);
+}
 
 #[test]
 fn aa_manual_tests() {
@@ -29,7 +53,7 @@ fn aa_manual_tests() {
 	aa_manual_test(
 		"{\"algorithm\":\"auth-ed25519\",\"private_key\":\"Gi-kD64CwTYaL6QPrgLBNhovpA-uAsE2Gi-kD64CwTZvwNWsATeieamFLzovnITWQ4a4wt2iBoi4hFbkRmZXmg==\"}", 
 		"{\"public_key\":\"b8DVrAE3onmphS86L5yE1kOGuMLdogaIuIRW5EZmV5o=\",\"algorithm\":\"auth-ed25519\"}",
-		vec![0x0A, 0x20, 0x0B, 0x20, 0xDE, 0x20, 0xAD, 0x20, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x20, 0xFF, 0x20, 0xFF, 0x20, 0x00],
+		vec![0x0A, 0x20, 0x0B, 0x20, 0xDE, 0x20, 0xAD, 0x20, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x2A, 0x20, 0xFF, 0x20, 0xFF, 0x20, 0x00],
 		"{\"signature\":\"EYO-liRbTrup7LuFWCaF77pD36si-oSH92K4bIlNtFsBZW6rhJOEWh2Zjg9pQpIvM_grFTXL0dXel9iImwNeCQ==\",\"identifier\":\"MijeyEWKvcciSvDCd3k1rxEbmQXtcgMRs\",\"content\":\"CiALIN4grSAqKioqKioqKioqKioqKiD_IP8gAA==\",\"algorithm\":\"auth-ed25519\"}"
 	); 
 
@@ -41,8 +65,3 @@ fn aa_manual_tests() {
 	);
 }
 
-
-fn aa_manual_test(privKey : &str, pubKey : &str, content : Vec<u8>, sContent :
-&str){
- //look in pkauth-haskell/tests/AA.hs
-}
