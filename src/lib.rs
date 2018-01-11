@@ -19,10 +19,10 @@ pub mod sym;
 pub use crypto_abstract::{ToAlgorithm, ToPublicKey};
 pub use internal::{AlgorithmId, ToIdentifier, PKAJ}; //, EncodePSF, DecodePSF, serialize_psf, deserialize_psf, PKAJ}; // decode_psf', deserializePSF' extractDomainName
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     #[test]
+//     fn it_works() {
+//         assert_eq!(2 + 2, 4);
+//     }
+// }

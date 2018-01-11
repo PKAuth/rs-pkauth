@@ -1,10 +1,40 @@
 extern crate pkauth;
+extern crate ring;
 extern crate serde_json;
 
 use pkauth::{ToPublicKey};
 use pkauth::asym::auth as aa;
 use pkauth::{PKAJ};
+use ring::rand::{SystemRandom, SecureRandom};
 
+#[test]
+fn aa_random_test() {
+    fn run() {
+        // Generate a random key.
+        let rng = SystemRandom::new();
+        let key = aa::gen( &rng, &aa::Algorithm::AAEd25519).unwrap();
+        let pk = ToPublicKey::to_public_key( &key);
+
+        // Generate something to sign.
+        let mut content = [0u8; 256].to_vec();
+        rng.fill( &mut content).unwrap();
+
+        // Sign it.
+        let signed = aa::sign_content( &key, content.clone()).unwrap();
+        
+        // Convert to JSON.
+        let key = serde_json::to_string( &PKAJ{pkaj: &key}).unwrap();
+        // let key = serde_json::to_vec( &key).unwrap();
+        let pk = serde_json::to_string( &PKAJ{pkaj: &pk}).unwrap();
+        let signed = serde_json::to_string( &signed).unwrap();
+
+        aa_manual_test( &key, &pk, content, &signed)
+    }
+
+    for _ in 1 .. 100 {
+        run()
+    }
+}
 
 fn aa_manual_test(priv_key : &str, pub_key : &str, content : Vec<u8>, s_content :
 &str){
