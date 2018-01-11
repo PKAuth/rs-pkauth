@@ -24,7 +24,6 @@ fn aa_random_test() {
         
         // Convert to JSON.
         let key = serde_json::to_string( &PKAJ{pkaj: &key}).unwrap();
-        // let key = serde_json::to_vec( &key).unwrap();
         let pk = serde_json::to_string( &PKAJ{pkaj: &pk}).unwrap();
         let signed = serde_json::to_string( &signed).unwrap();
 
