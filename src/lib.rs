@@ -11,8 +11,13 @@ extern crate serde;
 // extern crate serde_derive;
 extern crate serde_json;
 
-mod internal;
+/// Module for internal use. You probably don't want this.
+pub mod internal; 
+
+/// Asymmetric cryptography.
 pub mod asym;
+
+/// Symmetric cryptography.
 pub mod sym;
 
 // Re-exports.
