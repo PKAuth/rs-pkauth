@@ -2,9 +2,9 @@ extern crate pkauth;
 extern crate ring;
 extern crate serde_json;
 
-use pkauth::{ToPublicKey};
+use pkauth::{PKAJ, ToPublicKey, ToIdentifier};
 use pkauth::asym::auth as aa;
-use pkauth::{PKAJ};
+use pkauth::internal;
 use ring::rand::{SystemRandom, SecureRandom};
 
 #[test]
@@ -57,8 +57,58 @@ fn aa_manual_test(priv_key : &str, pub_key : &str, content : Vec<u8>, s_content 
     assert_eq!( verified, content);
 }
 
+fn hex_to_u8( hex : &str)  -> Vec<u8> {
+    let c = hex.len()/2;
+    let mut v = vec![0;c];
+
+    for i in 0 .. c {
+        v[i] = u8::from_str_radix( &hex[2*i .. 2*i + 1], 16).unwrap();
+    }
+
+    v
+}
+
+fn ed25519_rfc_test( private : &str, public : &str, message : &str, signature : &str) {
+    let mut public_key = "{\"public_key\":\"".to_string();
+    public_key.push_str( &internal::serialize_base64url( &hex_to_u8( public)));
+    public_key.push_str( "\",\"algorithm\":\"auth-ed25519\"}");
+
+    let mut private_vec = hex_to_u8( private);
+    private_vec.append( &mut hex_to_u8( public));
+    let mut private_key = "{\"algorithm\":\"auth-ed25519\",\"private_key\":\"".to_string();
+    private_key.push_str( &internal::serialize_base64url( &private_vec));
+    private_key.push_str( "\"}");
+
+    let raw_message = hex_to_u8( message);
+    let message = &internal::serialize_base64url( &hex_to_u8( message));
+
+    // Parse public key.
+    let pk : PKAJ<aa::PublicKey> = serde_json::from_str( &public_key).unwrap();
+    let identifier = ToIdentifier::to_identifier( &pk.pkaj);
+
+    let mut signature_b = "{\"signature\":\"".to_owned();
+    signature_b.push_str( &internal::serialize_base64url( &hex_to_u8( signature)));
+    signature_b.push_str( "\",\"identifier\":\"");
+    signature_b.push_str( &identifier);
+    signature_b.push_str( "\",\"content\":\"");
+    signature_b.push_str( message);
+    signature_b.push_str( "\",\"algorithm\":\"auth-ed25519\"}");
+
+    println!( "\n{}", signature_b);
+
+    aa_manual_test( &private_key, &public_key, raw_message, &signature_b);
+}
+
 #[test]
 fn aa_manual_tests() {
+    // From RFC8032.
+    ed25519_rfc_test( 
+        "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+        "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a", 
+        "", 
+        "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b"
+        );
+
 	aa_manual_test(
 		"{\"algorithm\":\"auth-ed25519\",\"private_key\":\"Jg0dbvyT9LImDR1u_JP0siYNHW78k_SyJg0dbvyT9LJ8FYC5TgtSnlxHYfo-v_aXpBabatIlDzJw87eTjUL_yw==\"}",
 		"{\"public_key\":\"fBWAuU4LUp5cR2H6Pr_2l6QWm2rSJQ8ycPO3k41C_8s=\",\"algorithm\":\"auth-ed25519\"}", 
