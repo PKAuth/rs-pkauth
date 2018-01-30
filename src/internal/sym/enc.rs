@@ -2,14 +2,12 @@
 use boolinator::Boolinator;
 use crypto_abstract::sym::enc;
 use crypto_abstract::sym::enc::{Key, Algorithm, CipherText};
-use ring::aead;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde::de;
 use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
 use std::fmt;
-use std::marker::PhantomData;
 
-use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, PSF, EncodePSF, generate_identifier, DecodePSF, PKAJ};
+use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, EncodePSF, generate_identifier, DecodePSF, PKAJ, serialize_psf, deserialize_psf};
 
 use ToAlgorithm;
 
@@ -17,8 +15,7 @@ impl<'a> Serialize for PKAJ<&'a Key> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S:Serializer {
         let mut o = serializer.serialize_struct("Key", 2)?;
 
-        o.serialize_field( "key", &EncodePSF::encode_psf( self.pkaj))?;
-        // let a = serialize_algorithm( &Algorithm::SEAesGcm256, serializer)?;
+        o.serialize_field( "key", &serialize_psf( self.pkaj))?;
         o.serialize_field( "algorithm", AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self.pkaj)))?;
 
         o.end()
@@ -62,7 +59,7 @@ impl<'d> Deserialize<'d> for PKAJ<Key> {
                 let key = key.ok_or_else(|| de::Error::missing_field("key"))?;
 
                 let alg = AlgorithmId::from_algorithm_id( &ident).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
-                let key = DecodePSF::decode_psf( &alg, &key).map_err( de::Error::custom)?;
+                let key = deserialize_psf( &alg, &key).map_err(de::Error::custom)?;
 
                 Ok( PKAJ{ pkaj: key})
             }
@@ -80,11 +77,11 @@ impl ToIdentifier for Key {
 }
 
 impl EncodePSF for Key {
-    fn encode_psf( key : &Key) -> PSF<Key> {
+    fn encode_psf( key : &Key) -> Vec<u8> {
         match *key {
             Key::SEAesGcm256( key) =>
                 // TODO: Test this XXX
-                PSF( key.to_vec(), PhantomData)
+                key.to_vec()
         }
     }
 }
@@ -92,7 +89,7 @@ impl EncodePSF for Key {
 impl DecodePSF for Key {
     type Algorithm = enc::Algorithm;
 
-    fn decode_psf( alg : &Algorithm, &PSF( ref psf, _) : &PSF<Key>) -> Result<Key, &'static str> where Self : Sized {
+    fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<Key, &'static str> where Self : Sized {
         match alg {
             &Algorithm::SEAesGcm256 => {
                 (psf.len() == 32).ok_or("Key is wrong length.")?;
@@ -109,6 +106,7 @@ impl DecodePSF for Key {
         }
     }
 }
+
 impl AlgorithmId for Algorithm {
     fn to_algorithm_id( alg : &Algorithm) -> &'static str {
         match *alg {
@@ -135,24 +133,24 @@ impl AlgorithmId for Algorithm {
 // 
 // }
 
-pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, S::Error> where S : Serializer {
-    AlgorithmId::to_algorithm_id( alg).serialize( serializer)
-}
-
-pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
-    let s = <&str>::deserialize(deserializer)?;
-    AlgorithmId::from_algorithm_id( s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
-}
+// pub fn serialize_algorithm<S>(alg : &Algorithm, serializer: S) -> Result<S::Ok, S::Error> where S : Serializer {
+//     AlgorithmId::to_algorithm_id( alg).serialize( serializer)
+// }
+// 
+// pub fn deserialize_algorithm<'d, D>( deserializer: D) -> Result<Algorithm, D::Error> where D : Deserializer<'d> {
+//     let s = <&str>::deserialize(deserializer)?;
+//     AlgorithmId::from_algorithm_id( s).ok_or( de::Error::custom( "Invalid algorithm identifier."))
+// }
 
 impl EncodePSF for CipherText {
-    fn encode_psf( cipher : &CipherText) -> PSF<CipherText> {
+    fn encode_psf( cipher : &CipherText) -> Vec<u8> {
         match cipher {
             &CipherText::SEAesGcm256( ref nonce, ref ciphertext) => {
                 // TODO: Test this. Correct order? XXX
                 let mut v = Vec::with_capacity( nonce.len() + ciphertext.len());
                 v.extend( nonce.iter());
                 v.extend( ciphertext.iter());
-                PSF( v, PhantomData)
+                v
             }
         }
     }
@@ -161,7 +159,7 @@ impl EncodePSF for CipherText {
 impl DecodePSF for CipherText {
     type Algorithm = enc::Algorithm;
 
-    fn decode_psf( alg : &Algorithm, &PSF( ref psf, _) : &PSF<CipherText>) -> Result<CipherText, &'static str> where Self : Sized {
+    fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<CipherText, &'static str> where Self : Sized {
         match alg {
             &Algorithm::SEAesGcm256 => {
                 let l = 12;

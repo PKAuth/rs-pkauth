@@ -11,11 +11,11 @@ ring = "0.12.1" # {git = "https://github.com/briansmith/ring.git", ref = "8411c0
 ripemd160="*"
 rust-base58="*"
 serde="*"
-serde_derive="*"
+# serde_derive="*"
 serde_json="*"
 # untrusted="^0.6.0"
 crypto-abstract={path="../rs-crypto-abstract"}
 
-[[bin]]
-name = "gen"
-path = "src/bin.rs"
+# [[bin]]
+# name = "gen"
+# path = "src/bin.rs"
