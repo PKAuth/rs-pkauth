@@ -7,13 +7,13 @@ authors = ["James Parker <jp@pkauth.com>"]
 base64="*"
 boolinator="*"
 # ring="*"
-ring = {git = "https://github.com/briansmith/ring.git", ref = "8411c0098ac1f8b4b96d0766a5057aae5e78c42a"}
+ring = "0.12.1" # {git = "https://github.com/briansmith/ring.git", ref = "8411c0098ac1f8b4b96d0766a5057aae5e78c42a"}
 ripemd160="*"
 rust-base58="*"
 serde="*"
 serde_derive="*"
 serde_json="*"
-untrusted="^0.6.0"
+# untrusted="^0.6.0"
 crypto-abstract={path="../rs-crypto-abstract"}
 
 [[bin]]
