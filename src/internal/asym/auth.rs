@@ -301,13 +301,13 @@ impl DecodePSF for Signature {
 impl AlgorithmId for Algorithm {
     fn to_algorithm_id( alg : &Algorithm) -> &'static str {
         match *alg {
-            Algorithm::AAEd25519 => "auth-ed25519"
+            Algorithm::AAEd25519 => "aa-ed25519"
         }
     }
 
     fn from_algorithm_id( alg : &str) -> Option<Self> {
         match alg {
-            "auth-ed25519" => Some( Algorithm::AAEd25519),
+            "aa-ed25519" => Some( Algorithm::AAEd25519),
             _ => None
         }
     }
