@@ -18,6 +18,7 @@ use internal::{PKAIdentifier};
 use internal::*;
 
 // #[derive(Serialize, Deserialize)]
+// JP: Add PhantomData?
 pub struct PKASymEncrypted {
     ciphertext : enc::CipherText,
     identifier : PKAIdentifier

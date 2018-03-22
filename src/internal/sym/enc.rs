@@ -7,7 +7,7 @@ use serde::de;
 use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
 use std::fmt;
 
-use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, EncodePSF, generate_identifier, DecodePSF, PKAJ, serialize_psf, deserialize_psf};
+use internal::{ToIdentifier, PKAIdentifier, AlgorithmId, EncodePSF, generate_identifier, DecodePSF, PKAJ, serialize_psf, deserialize_psf, u8_to_fixed_length_32};
 
 use ToAlgorithm;
 
@@ -92,13 +92,7 @@ impl DecodePSF for Key {
     fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<Key, &'static str> where Self : Sized {
         match alg {
             &Algorithm::SEAesGcm256 => {
-                (psf.len() == 32).ok_or("Key is wrong length.")?;
-
-                let mut key = [0u8;32];
-
-                for (place, element) in key.iter_mut().zip( psf.into_iter()) {
-                    *place = *element;
-                }
+                let key = u8_to_fixed_length_32( psf).ok_or("Key is wrong length.")?;
 
                 // TODO: test this XXX
                 Ok( Key::SEAesGcm256( key))

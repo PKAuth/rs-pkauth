@@ -10,6 +10,7 @@ extern crate serde;
 // #[macro_use]
 // extern crate serde_derive;
 extern crate serde_json;
+extern crate untrusted;
 
 /// Module for internal use. You probably don't want this.
 pub mod internal; 

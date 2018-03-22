@@ -3,6 +3,7 @@ pub mod asym;
 pub mod sym;
 
 use base64;
+use boolinator::Boolinator;
 use ring::digest::{digest, SHA256};
 use ripemd160::{Ripemd160, Digest};
 use rust_base58::base58::{ToBase58};
@@ -107,4 +108,18 @@ fn ripemd160( d : &Vec<u8>) -> Vec<u8> {
     let mut h = Ripemd160::new();
     h.input( d);
     h.result().to_vec()
+}
+
+// JP: Move this somewhere upstream to remove duplication?
+fn u8_to_fixed_length_32( data : &[u8]) -> Option<[u8; 32]> {
+    // Check length.
+    (data.len() == 32).as_option()?;
+
+    // Copy result to fixed length array.
+    let mut res = [0u8; 32];
+    for (place, element) in res.iter_mut().zip( data) {
+        *place = *element;
+    }
+
+    Some( res)
 }
