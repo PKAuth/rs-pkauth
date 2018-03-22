@@ -98,13 +98,13 @@ impl AlgorithmId for Algorithm {
     fn to_algorithm_id( alg : &Algorithm) -> &'static str {
         match *alg {
             // TODO: RSA XXX
-            Algorithm::AEX25519 => "enc-x25519"
+            Algorithm::AEX25519 => "ae-x25519"
         }
     }
 
     fn from_algorithm_id( alg : &str) -> Option<Self> {
         match alg {
-            "enc-x25519" => Some( Algorithm::AEX25519),
+            "ae-x25519" => Some( Algorithm::AEX25519),
             _ => None
         }
     }
