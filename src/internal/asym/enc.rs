@@ -72,7 +72,7 @@ impl<'d> Deserialize<'d> for PKAJ<PublicKey> {
 impl EncodePSF for PublicKey {
     fn encode_psf( key : &PublicKey) -> Vec<u8> {
         match *key {
-            PublicKey::AEX25519AesGcm256( key) => {
+            PublicKey::AEX25519( key) => {
                 // TODO: Test this XXX
                 key.to_vec()
             }
@@ -85,11 +85,11 @@ impl DecodePSF for PublicKey {
 
     fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<PublicKey, &'static str> where Self : Sized {
         match alg {
-            &Algorithm::AEX25519AesGcm256 => {
+            &Algorithm::AEX25519 => {
                 let key = u8_to_fixed_length_32( psf).ok_or("Public key is wrong length.")?;
                 
                 // TODO: test this XXX
-                Ok( PublicKey::AEX25519AesGcm256( key))
+                Ok( PublicKey::AEX25519( key))
             }
         }
     }
@@ -98,13 +98,13 @@ impl AlgorithmId for Algorithm {
     fn to_algorithm_id( alg : &Algorithm) -> &'static str {
         match *alg {
             // TODO: RSA XXX
-            Algorithm::AEX25519AesGcm256 => "enc-x25519aesgcm256"
+            Algorithm::AEX25519 => "enc-x25519"
         }
     }
 
     fn from_algorithm_id( alg : &str) -> Option<Self> {
         match alg {
-            "enc-x25519aesgcm256" => Some( Algorithm::AEX25519AesGcm256),
+            "enc-x25519" => Some( Algorithm::AEX25519),
             _ => None
         }
     }
@@ -170,7 +170,7 @@ impl<'d> Deserialize<'d> for PKAJ<PrivateKey> {
 impl EncodePSF for PrivateKey {
     fn encode_psf( key : &PrivateKey) -> Vec<u8> {
         match *key {
-            PrivateKey::AEX25519AesGcm256( ref key) => {
+            PrivateKey::AEX25519( ref key) => {
                 // TODO: Test this. Verify length. XXX
                 key.private_key_bytes().to_vec()
             }
@@ -183,14 +183,14 @@ impl DecodePSF for PrivateKey {
 
     fn decode_psf( alg : &Algorithm, psf : &Vec<u8>) -> Result<PrivateKey, &'static str> where Self : Sized {
         match alg {
-            &Algorithm::AEX25519AesGcm256 => {
+            &Algorithm::AEX25519 => {
                 // JP: Validate length and copy?
                 // let key = u8_to_fixed_length_32( psf).ok_or("Private key is wrong length.")?;
                     
                 let key = ReusablePrivateKey::from_bytes( &X25519, Input::from( &psf)).or( Err("Invalid private key."))?;
 
                 // TODO: test this XXX
-                Ok( PrivateKey::AEX25519AesGcm256( key))
+                Ok( PrivateKey::AEX25519( key))
             }
         }
     }
