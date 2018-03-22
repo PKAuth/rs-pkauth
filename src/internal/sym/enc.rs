@@ -104,13 +104,13 @@ impl DecodePSF for Key {
 impl AlgorithmId for Algorithm {
     fn to_algorithm_id( alg : &Algorithm) -> &'static str {
         match *alg {
-            Algorithm::SEAesGcm256 => "enc-aesgcm256"
+            Algorithm::SEAesGcm256 => "se-aesgcm256"
         }
     }
 
     fn from_algorithm_id( alg : &str) -> Option<Self> {
         match alg {
-            "enc-aesgcm256" => Some( Algorithm::SEAesGcm256),
+            "se-aesgcm256" => Some( Algorithm::SEAesGcm256),
             _ => None
         }
     }
