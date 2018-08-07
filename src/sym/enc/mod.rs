@@ -14,14 +14,14 @@ use serde::de::{Deserialize, Deserializer, DeserializeOwned, Visitor, MapAccess}
 use serde_json;
 use std::fmt;
 
-use internal::{PKAIdentifier};
+// use internal::{PKAIdentifier};
 use internal::*;
 
 // #[derive(Serialize, Deserialize)]
 // JP: Add PhantomData?
 pub struct PKASymEncrypted {
     ciphertext : enc::CipherText,
-    identifier : PKAIdentifier
+    // identifier : PKAIdentifier // JP: We don't need this wrapper type anymore?
 }
 
 impl ToAlgorithm for PKASymEncrypted {
@@ -37,7 +37,7 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
 
         struct V;
 
-        const FIELDS: &'static [&'static str] = &["ciphertext","identifier","algorithm"];
+        const FIELDS: &'static [&'static str] = &["ciphertext","algorithm"]; // ,"identifier"
 
         impl <'d> Visitor<'d> for V {
             type Value = PKASymEncrypted;
@@ -48,7 +48,7 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
 
             fn visit_map<U>( self, mut map : U) -> Result<PKASymEncrypted, U::Error> where U: MapAccess<'d> {
                 let mut ciphertext = None;
-                let mut identifier = None;
+                // let mut identifier = None;
                 let mut algorithm = None;
     
                 while let Some(k) = map.next_key::<String>()? {
@@ -57,10 +57,10 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
                             ciphertext.is_none().ok_or( de::Error::duplicate_field("ciphertext"))?;
                             ciphertext = Some( map.next_value()?);
                         }
-                        "identifier" => {
-                            identifier.is_none().ok_or( de::Error::duplicate_field("identifier"))?;
-                            identifier = Some( map.next_value()?);
-                        }
+                        // "identifier" => {
+                        //     identifier.is_none().ok_or( de::Error::duplicate_field("identifier"))?;
+                        //     identifier = Some( map.next_value()?);
+                        // }
                         "algorithm" => {
                             algorithm.is_none().ok_or( de::Error::duplicate_field("algorithm"))?;
                             algorithm = Some( map.next_value()?);
@@ -72,13 +72,13 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
                 }
 
                 let ciphertext : String = ciphertext.ok_or_else(|| de::Error::missing_field("ciphertext"))?;
-                let identifier : String = identifier.ok_or_else(|| de::Error::missing_field("identifier"))?;
+                // let identifier : String = identifier.ok_or_else(|| de::Error::missing_field("identifier"))?;
                 let algorithm : String = algorithm.ok_or_else(|| de::Error::missing_field("algorithm"))?;
 
                 let algorithm = AlgorithmId::from_algorithm_id( &algorithm).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
                 let ciphertext = deserialize_psf( &algorithm, &ciphertext).map_err(de::Error::custom)?;
 
-                Ok( PKASymEncrypted{ ciphertext : ciphertext, identifier : identifier})
+                Ok( PKASymEncrypted{ ciphertext : ciphertext}) // , identifier : identifier
             }
         }
 
@@ -91,7 +91,7 @@ impl Serialize for PKASymEncrypted {
         let mut s = serializer.serialize_struct("PKASymEncrypted", 3)?;
 
         s.serialize_field( "ciphertext", &serialize_psf( &self.ciphertext))?;
-        s.serialize_field( "identifier", &self.identifier)?;
+        // s.serialize_field( "identifier", &self.identifier)?;
         let a = AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self));
         s.serialize_field( "algorithm", a)?;
 
@@ -167,9 +167,9 @@ pub fn decrypt<T>( key : &Key, cipher : PKASymEncrypted) -> Result<T, &'static s
 pub fn encrypt_content( rng : &SystemRandom, key : &Key, msg : Vec<u8>) -> Result<PKASymEncrypted, &'static str> {
     let ciphertext = enc::encrypt( &rng, &key, msg).map_err(|_| "Error encrypting content.")?;
 
-    let i = ToIdentifier::to_identifier( key);
+    // let i = ToIdentifier::to_identifier( key);
 
-    Ok( PKASymEncrypted{ ciphertext : ciphertext, identifier : i})
+    Ok( PKASymEncrypted{ ciphertext : ciphertext}) // , identifier : i
 }
 
 pub fn decrypt_content( key : &Key, cipher : PKASymEncrypted) -> Result<Vec<u8>, &'static str> {
@@ -177,8 +177,8 @@ pub fn decrypt_content( key : &Key, cipher : PKASymEncrypted) -> Result<Vec<u8>,
     let alg = ToAlgorithm::to_algorithm( &cipher);
     (ToAlgorithm::to_algorithm( key) == alg).ok_or("Algorithms do not match.")?;
 
-    // Make sure identifiers match.
-    (&ToIdentifier::to_identifier( key) == &cipher.identifier).ok_or("Key identifiers do not match.")?;
+    // // Make sure identifiers match.
+    // (&ToIdentifier::to_identifier( key) == &cipher.identifier).ok_or("Key identifiers do not match.")?;
 
     enc::decrypt( &key, cipher.ciphertext).map_err(|_| "Error decrypting content.")
 }
