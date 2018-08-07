@@ -9,13 +9,13 @@ use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde_json;
 use std::fmt;
 
-use internal::{PKAIdentifier, ToIdentifier, AlgorithmId, serialize_base64url, serialize_psf, deserialize_base64url, deserialize_psf};
-// use internal::{PKAIdentifier,PSF, EncodePSF, DecodePSF};
+use internal::{AlgorithmId, serialize_base64url, serialize_psf, deserialize_base64url, deserialize_psf};
+// use internal::{ToIdentifier, PKAIdentifier,PSF, EncodePSF, DecodePSF};
 
 pub struct PKASigned { //<T> {
     content : Vec<u8>, // JP: Base64 newtype wrapper??
     signature : auth::Signature,
-    identifier : PKAIdentifier
+    // identifier : PKAIdentifier
 }
 
 impl ToAlgorithm for PKASigned {
@@ -32,7 +32,7 @@ impl Serialize for PKASigned {
 
         s.serialize_field( "content", &serialize_base64url( &self.content))?;
         s.serialize_field( "signature", &serialize_psf( &self.signature))?;
-        s.serialize_field( "identifier", &self.identifier)?;
+        // s.serialize_field( "identifier", &self.identifier)?;
         s.serialize_field( "algorithm", &AlgorithmId::to_algorithm_id( &ToAlgorithm::to_algorithm( self)))?;
 
         s.end()
@@ -44,7 +44,7 @@ impl<'d> Deserialize<'d> for PKASigned {
 
         struct V;
 
-        const FIELDS : &'static [&'static str] = &["content", "signature", "identifier", "algorithm"];
+        const FIELDS : &'static [&'static str] = &["content", "signature", "algorithm"]; // , "identifier"
 
         impl<'d> Visitor<'d> for V {
             type Value = PKASigned;
@@ -56,7 +56,7 @@ impl<'d> Deserialize<'d> for PKASigned {
             fn visit_map<U>( self, mut map : U) -> Result<PKASigned, U::Error> where U : MapAccess<'d> {
                 let mut content = None;
                 let mut signature = None;
-                let mut identifier = None;
+                // let mut identifier = None;
                 let mut algorithm = None;
 
                 while let Some(k) = map.next_key::<String>()? {
@@ -69,10 +69,10 @@ impl<'d> Deserialize<'d> for PKASigned {
                             signature.is_none().ok_or( de::Error::duplicate_field("signature"))?;
                             signature = Some( map.next_value()?);
                         }
-                        "identifier" => {
-                            identifier.is_none().ok_or( de::Error::duplicate_field("identifier"))?;
-                            identifier = Some( map.next_value()?);
-                        }
+                        // "identifier" => {
+                        //     identifier.is_none().ok_or( de::Error::duplicate_field("identifier"))?;
+                        //     identifier = Some( map.next_value()?);
+                        // }
                         "algorithm" => {
                             algorithm.is_none().ok_or( de::Error::duplicate_field("algorithm"))?;
                             algorithm = Some( map.next_value()?);
@@ -85,14 +85,14 @@ impl<'d> Deserialize<'d> for PKASigned {
 
                 let content : String = content.ok_or_else(|| de::Error::missing_field("content"))?;
                 let signature : String = signature.ok_or_else(|| de::Error::missing_field("signature"))?;
-                let identifier : String = identifier.ok_or_else(|| de::Error::missing_field("identifier"))?;
+                // let identifier : String = identifier.ok_or_else(|| de::Error::missing_field("identifier"))?;
                 let algorithm : String = algorithm.ok_or_else(|| de::Error::missing_field("algorithm"))?;
 
                 let algorithm = AlgorithmId::from_algorithm_id( &algorithm).ok_or( de::Error::custom( "invalid algorithm identifier"))?;
                 let signature = deserialize_psf( &algorithm, &signature).map_err(de::Error::custom)?;
                 let content = deserialize_base64url( &content).map_err(de::Error::custom)?;
 
-                Ok( PKASigned{content : content, signature : signature, identifier : identifier})
+                Ok( PKASigned{content : content, signature : signature}) // , identifier : identifier
             }
         }
 
@@ -122,12 +122,12 @@ pub fn verify<T>( key : &PublicKey, signed : PKASigned ) -> Result <T,&'static s
 
 pub fn sign_content( key : &PrivateKey, message : Vec<u8>) -> Result<PKASigned, &'static str> {
     let signature = auth::sign( &key, &message).map_err(|_| "Error signing content.")?;
-    let identifier = ToIdentifier::to_identifier( key);
+    // let identifier = ToIdentifier::to_identifier( key);
 
     Ok( PKASigned {
         content : message,
         signature : signature,
-        identifier : identifier,
+        // identifier : identifier,
     })
 }
 
@@ -137,8 +137,8 @@ pub fn verify_content( key : &PublicKey, signed : PKASigned) -> Result<Vec<u8>, 
     let alg = ToAlgorithm::to_algorithm( &signed.signature);
     (ToAlgorithm::to_algorithm( key) == alg).ok_or("Algorithms do not match.")?;
 
-    // Check that the identifier matches.
-    (ToIdentifier::to_identifier( key) == signed.identifier).ok_or("Key identifiers do not match.")?;
+    // // Check that the identifier matches.
+    // (ToIdentifier::to_identifier( key) == signed.identifier).ok_or("Key identifiers do not match.")?;
 
     // Verify content.
     auth::verify( key, &signed.content, &signed.signature).ok_or("Invalid signature.")?;
