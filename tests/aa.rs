@@ -2,7 +2,7 @@ extern crate pkauth;
 extern crate ring;
 extern crate serde_json;
 
-use pkauth::{PKAJ, ToPublicKey, ToIdentifier};
+use pkauth::{PKAJ, ToPublicKey};
 use pkauth::asym::auth as aa;
 use pkauth::internal;
 use ring::rand::{SystemRandom, SecureRandom};
@@ -83,8 +83,8 @@ fn ed25519_rfc_test( private : &str, public : &str, message : &str, signature : 
     let message = &internal::serialize_base64url( &hex_to_u8( message));
 
     // Parse public key.
-    let pk : PKAJ<aa::PrivateKey> = serde_json::from_str( &private_key).unwrap();
-    let identifier = ToIdentifier::to_identifier( &pk.pkaj);
+    // let pk : PKAJ<aa::PrivateKey> = serde_json::from_str( &private_key).unwrap();
+    // let identifier = ToIdentifier::to_identifier( &pk.pkaj);
 
     let mut signature_b = "{\"signature\":\"".to_owned();
     signature_b.push_str( &internal::serialize_base64url( &hex_to_u8( signature)));

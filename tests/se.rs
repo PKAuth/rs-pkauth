@@ -35,8 +35,8 @@ fn se_random_test() {
 #[test]
 fn se_manual_tests() {
     se_manual_test( "{\"key\":\"1quLbjzIufNwHh7Oc5ayXiosE3RoJBEDGH_cEcoQfDE=\",\"algorithm\":\"se-aesgcm256\"}", 
-                    // "{\"ciphertext\":\"edzNkvuqE-BUGS2Y0RXnt9C4d52B7v8boQtdn1nkdSWesa_Y9RRW2c1acAAIv8YHeb0=\",\"identifier\":\"GzD1i8BgqvT7tTd24K9CrHqWRqMSbfVsp\",\"algorithm\":\"se-aesgcm256\"}",
-                    "{\"ciphertext\":\"edzNkvuqE-BUGS2Y0RXnt9C4d52B7v8boQtdn1nkdSWesa_Y9RRW2c1acAAIv8YHeb0=\",\"algorithm\":\"se-aesgcm256\"}",
+                    "{\"ciphertext\":\"edzNkvuqE-BUGS2Y0RXnt9C4d52B7v8boQtdn1nkdSWesa_Y9RRW2c1acAAIv8YHeb0=\",\"identifier\":\"GzD1i8BgqvT7tTd24K9CrHqWRqMSbfVsp\",\"algorithm\":\"se-aesgcm256\"}",
+                    // "{\"ciphertext\":\"edzNkvuqE-BUGS2Y0RXnt9C4d52B7v8boQtdn1nkdSWesa_Y9RRW2c1acAAIv8YHeb0=\",\"algorithm\":\"se-aesgcm256\"}",
                     "this is rust plaintext".to_owned().into_bytes());
 
     se_manual_test( "{\"key\":\"blZ9VO3AZxbHbv7RflznaEvWC7j3X1FH6pOTwpcYqo4=\",\"algorithm\":\"se-aesgcm256\"}",

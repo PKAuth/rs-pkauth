@@ -67,6 +67,7 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
                         }
                         _k => {
                             // Skip unknown fields.
+                            let _ : Result<(),U::Error> = map.next_value();
                             // Err(de::Error::unknown_field(k, FIELDS))?;
                         }
                     }

@@ -51,6 +51,7 @@ impl<'d> Deserialize<'d> for PKAJ<PublicKey> {
                         }
                         _k => {
                             // Skip unknown fields.
+                            let _ : Result<(),U::Error> = map.next_value();
                             // Err(de::Error::unknown_field(k, FIELDS))?;
                         }
                     }
@@ -150,6 +151,7 @@ impl<'d> Deserialize<'d> for PKAJ<PrivateKey> {
                         }
                         _k => {
                             // Skip unknown fields.
+                            let _ : Result<(),U::Error> = map.next_value();
                             // Err(de::Error::unknown_field(k, FIELDS))?;
                         }
                     }
