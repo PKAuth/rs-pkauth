@@ -49,8 +49,9 @@ impl<'d> Deserialize<'d> for PKAJ<Key> {
                             key.is_none().ok_or( de::Error::duplicate_field( "key"))?;
                             key = Some( map.next_value()?);
                         }
-                        k => {
-                            Err(de::Error::unknown_field(k, FIELDS))?;
+                        _k => {
+                            // Skip unknown fields.
+                            // Err(de::Error::unknown_field(k, FIELDS))?;
                         }
                     }
                 }

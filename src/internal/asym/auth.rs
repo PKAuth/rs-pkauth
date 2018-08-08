@@ -50,8 +50,9 @@ impl<'d> Deserialize<'d> for PKAJ<PublicKey> {
                             public_key.is_none().ok_or( de::Error::duplicate_field( "public_key"))?;
                             public_key = Some( map.next_value()?);
                         }
-                        k => {
-                            Err(de::Error::unknown_field(k, FIELDS))?;
+                        _k => {
+                            // Skip unknown fields.
+                            // Err(de::Error::unknown_field(k, FIELDS))?;
                         }
                     }
                 }
@@ -107,8 +108,9 @@ impl<'d> Deserialize<'d> for PKAJ<PrivateKey> {
                             algorithm.is_none().ok_or( de::Error::duplicate_field( "algorithm"))?;
                             algorithm = Some( map.next_value()?);
                         }
-                        k => {
-                            Err(de::Error::unknown_field(k, FIELDS))?;
+                        _k => {
+                            // Skip unknown fields.
+                            // Err(de::Error::unknown_field(k, FIELDS))?;
                         }
                     }
                 }

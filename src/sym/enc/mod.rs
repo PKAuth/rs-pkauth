@@ -65,8 +65,9 @@ impl<'d> Deserialize<'d> for PKASymEncrypted {
                             algorithm.is_none().ok_or( de::Error::duplicate_field("algorithm"))?;
                             algorithm = Some( map.next_value()?);
                         }
-                        k => {
-                            Err(de::Error::unknown_field(k, FIELDS))?;
+                        _k => {
+                            // Skip unknown fields.
+                            // Err(de::Error::unknown_field(k, FIELDS))?;
                         }
                     }
                 }
